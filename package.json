@@ -1,0 +1,41 @@
+{
+  "name": "frontcache",
+  "version": "0.1.0",
+  "description": "Typed, framework-independent HTTP clients with opt-in memory caching and Axios/Fetch transports",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "files": ["dist", "README.md"],
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./fetch": { "types": "./dist/adapters/fetch.d.ts", "import": "./dist/adapters/fetch.js" },
+    "./axios": { "types": "./dist/adapters/axios.d.ts", "import": "./dist/adapters/axios.js" },
+    "./cache": { "types": "./dist/cache/index.d.ts", "import": "./dist/cache/index.js" },
+    "./response/sends": { "types": "./dist/response/sends.d.ts", "import": "./dist/response/sends.js" },
+    "./compat/sends": { "types": "./dist/compat/sends/index.d.ts", "import": "./dist/compat/sends/index.js" }
+  },
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "test:commit": "node scripts/pre-commit.mjs",
+    "prepare": "husky",
+    "build": "tsc -p tsconfig.build.json",
+    "verify": "node scripts/verify.mjs",
+    "pack:local": "node scripts/pack.mjs"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.2",
+    "axios": "^1.13.3",
+    "husky": "9.1.7",
+    "typescript": "7.0.2",
+    "typescript-min": "npm:typescript@5.0.4",
+    "zod": "4.6.5"
+  },
+  "peerDependencies": {
+    "axios": "^1.0.0"
+  },
+  "peerDependenciesMeta": { "axios": { "optional": true } }
+}
