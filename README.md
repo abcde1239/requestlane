@@ -4,6 +4,8 @@
 
 支持 Fetch、Axios、请求与响应类型约束、运行时校验，以及超时和取消。缓存以内存为主，按需开启，支持 TTL、并发合并与失效。
 
+适用于现代浏览器和 Node 20+，提供 ESM 与类型声明，支持 TypeScript 5.0+。
+
 ## 安装
 
 从 npm 安装：
@@ -12,7 +14,6 @@
 npm install frontcache
 ```
 
-安装时会自动安装 Axios，无需单独安装运行依赖。适用于现代浏览器和 Node 20+，提供 ESM 与类型声明，支持 TypeScript 5.0+。
 
 ## 基本请求
 
@@ -74,11 +75,7 @@ client.dispose() // 使用结束时释放缓存与在途请求
 
 ## 运行时校验
 
-可接入自定义 `parse` 校验器或 Zod，校验结果自动推断类型：
-
-```bash
-npm install zod
-```
+Zod 随 frontcache 自动安装，也可接入自定义 `parse` 校验器，校验结果自动推断类型：
 
 ```ts
 import { z } from 'zod'
