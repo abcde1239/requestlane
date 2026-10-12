@@ -11,7 +11,8 @@ export function consumers(tarball) {
   mkdirSync(install, { recursive: true })
   run('tar', ['-xf', tarball, '-C', install, '--strip-components=1'])
   const require = createRequire(join(directory, 'consumer.mjs'))
-  assert.throws(() => require.resolve('axios'), 'Fetch-only consumer must not have Axios installed')
+  // 手工解压不安装 dependencies，仅验证核心/Fetch import 图不会加载 Axios；自动安装另由 install smoke 检查。
+  assert.throws(() => require.resolve('axios'), '手工解压的隔离环境不应有 Axios')
   writeFileSync(join(directory, 'package.json'), JSON.stringify({ type: 'module' }))
   writeFileSync(join(directory, 'consumer.mjs'), `
 import assert from 'node:assert/strict'
