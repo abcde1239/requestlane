@@ -10,11 +10,9 @@
 
 ```bash
 npm install frontcache
-# 使用 Axios 时安装
-npm install axios
 ```
 
-使用 Fetch 无需安装 Axios。适用于现代浏览器和 Node 20+，提供 ESM 与类型声明，支持 TypeScript 5.0+。
+安装时会自动安装 Axios，无需单独安装运行依赖。适用于现代浏览器和 Node 20+，提供 ESM 与类型声明，支持 TypeScript 5.0+。
 
 ## 基本请求
 
@@ -39,6 +37,15 @@ client.clearToken()
 ```
 
 支持 GET、POST、PUT、PATCH、DELETE 等请求，默认返回 JSON 数据。未声明响应类型时返回 `unknown`。需要 Axios 时，将传输配置换成 `createAxiosTransport()`（从 `frontcache/axios` 导入）。
+
+```ts
+import { createAxiosTransport } from 'frontcache/axios'
+
+const axiosClient = createClient({
+  baseURL: '/api',
+  transport: createAxiosTransport()
+})
+```
 
 ## 类型与缓存
 
@@ -69,8 +76,12 @@ client.dispose() // 使用结束时释放缓存与在途请求
 
 可接入自定义 `parse` 校验器或 Zod，校验结果自动推断类型：
 
+```bash
+npm install zod
+```
+
 ```ts
-import { z } from 'zod' // 使用时自行安装 zod
+import { z } from 'zod'
 
 const endpoint = defineEndpoint({
   method: 'GET',
