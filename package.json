@@ -1,6 +1,6 @@
 {
   "name": "frontcache",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Typed, framework-independent HTTP clients with opt-in memory caching and Axios/Fetch transports",
   "type": "module",
   "license": "MIT",
@@ -32,13 +32,13 @@
     "pack:local": "node scripts/pack.mjs"
   },
   "dependencies": {
-    "axios": "^1.20.0"
+    "axios": "^1.20.0",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@types/bun": "1.4.2",
     "husky": "9.1.7",
     "typescript": "7.0.2",
-    "typescript-min": "npm:typescript@5.0.4",
-    "zod": "4.6.5"
+    "typescript-min": "npm:typescript@5.0.4"
   }
 }
