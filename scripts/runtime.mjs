@@ -11,3 +11,7 @@ export function run(command, args, options = {}) {
 export function compiler(name = 'typescript', args = ['--noEmit']) {
   run(process.execPath, [resolve(root, `node_modules/${name}/bin/tsc`), ...args])
 }
+export function npm(args, options = {}) {
+  const cli = process.env.npm_execpath ?? resolve(dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')
+  return process.platform === 'win32' ? run(process.execPath, [cli, ...args], options) : run('npm', args, options)
+}
