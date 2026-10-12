@@ -14,7 +14,6 @@
 npm install frontcache
 ```
 
-
 ## 基本请求
 
 ```ts
@@ -75,7 +74,7 @@ client.dispose() // 使用结束时释放缓存与在途请求
 
 ## 运行时校验
 
-Zod 随 frontcache 自动安装，也可接入自定义 `parse` 校验器，校验结果自动推断类型：
+运行时校验可使用zod，也可接入自定义 `parse` 校验器，校验结果自动推断类型：
 
 ```ts
 import { z } from 'zod'
