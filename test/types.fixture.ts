@@ -1,16 +1,69 @@
-import { createClient, defineEndpoint, type ReadonlyData } from '../src/index.js'
-import { createFetchTransport } from '../src/adapters/fetch.js'
+import {
+  createClient,
+  defineEndpoint,
+  type ReadonlyData,
+  type ResponseType,
+  type RequestOptions,
+  type EndpointOptions,
+  type TransportRequest,
+} from '@'
+import { createFetchTransport } from '@/adapters/fetch'
 import { z } from 'zod'
 
+// 拆分类型后必须仍使用通信包类型，不能意外解析到 DOM 的同名 ResponseType。
+const representations: readonly ResponseType[] = [
+  'json',
+  'text',
+  'blob',
+  'arraybuffer',
+]
+for (const responseType of representations) {
+  const request: RequestOptions = { responseType }
+  const endpoint: EndpointOptions<{}> = {
+    method: 'GET',
+    path: '/types',
+    responseType,
+  }
+  const transport: Omit<TransportRequest, 'signal'> = {
+    url: endpoint.path,
+    method: endpoint.method,
+    headers: {},
+    responseType: request.responseType ?? 'json',
+  }
+  void transport
+}
+// @ts-expect-error DOM 的响应可见性不是通信包的解析格式
+const domResponseType: ResponseType = 'opaque'
+// @ts-expect-error 请求方法必须使用本包 Method，不能退化成 any
+const invalidMethod: TransportRequest['method'] = 'INVALID'
+void [domResponseType, invalidMethod]
+
 // 不作为运行时测试执行；由 strict tsc 同时检查正例与反例。
-interface Member { id: string; profile: { name: string } }
+interface Member {
+  id: string
+  profile: { name: string }
+}
 const client = createClient({ transport: createFetchTransport() })
-const detail = defineEndpoint<{ params: { id: string }; query: { sort: 'latest' | 'hot' }; data: Member }>({ method: 'GET', path: '/members/:id' })
-const result: Promise<ReadonlyData<Member>> = client.call(detail, { params: { id: '1' }, query: { sort: 'latest' } })
+const detail = defineEndpoint<{
+  params: { id: string }
+  query: { sort: 'latest' | 'hot' }
+  data: Member
+}>({ method: 'GET', path: '/members/:id' })
+const result: Promise<ReadonlyData<Member>> = client.call(detail, {
+  params: { id: '1' },
+  query: { sort: 'latest' },
+})
 const unknownResult: Promise<unknown> = client.get('/untyped')
-const inferred = defineEndpoint({ method: 'GET', path: '/inferred', validator: { parse: () => 1 } })
+const inferred = defineEndpoint({
+  method: 'GET',
+  path: '/inferred',
+  validator: { parse: () => 1 },
+})
 const inferredResult: Promise<number> = client.call(inferred, {})
-const write = defineEndpoint<{ body: { name: string }; data: Member }>({ method: 'PATCH', path: '/members' })
+const write = defineEndpoint<{ body: { name: string }; data: Member }>({
+  method: 'PATCH',
+  path: '/members',
+})
 client.call(write, { body: { name: 'new' } })
 // @ts-expect-error missing required path params
 client.call(detail, { query: { sort: 'hot' } })
@@ -34,18 +87,43 @@ async function immutable() {
   value.profile.name = 'mutation'
 }
 void [result, inferredResult, unsafe, immutable]
-const binary = defineEndpoint<{ data: Blob }>({ method: 'GET', path: '/binary', responseType: 'blob' })
-async function binaryMethods() { return (await client.call(binary, {})).arrayBuffer() }
+const binary = defineEndpoint<{ data: Blob }>({
+  method: 'GET',
+  path: '/binary',
+  responseType: 'blob',
+})
+async function binaryMethods() {
+  return (await client.call(binary, {})).arrayBuffer()
+}
 const binaryResult: Promise<ArrayBuffer> = binaryMethods()
 void binaryResult
 
-const schema = z.object({ value: z.string().transform(value => Number(value)) })
-const schemaEndpoint = defineEndpoint({ method: 'GET', path: '/schema', validator: schema })
-const schemaResult: Promise<ReadonlyData<z.output<typeof schema>>> = client.call(schemaEndpoint, {})
+const schema = z.object({
+  value: z.string().transform((value) => Number(value)),
+})
+const schemaEndpoint = defineEndpoint({
+  method: 'GET',
+  path: '/schema',
+  validator: schema,
+})
+const schemaResult: Promise<ReadonlyData<z.output<typeof schema>>> =
+  client.call(schemaEndpoint, {})
 // @ts-expect-error transformed output is number, not the input string
-const schemaInputResult: Promise<{ value: string }> = client.call(schemaEndpoint, {})
-const asyncSchemaEndpoint = defineEndpoint({ method: 'GET', path: '/async-schema', validator: { parse: (value: unknown) => schema.parseAsync(value) } })
-const asyncSchemaResult: Promise<ReadonlyData<z.output<typeof schema>>> = client.call(asyncSchemaEndpoint, {})
-// @ts-expect-error validator output must agree with an explicit data declaration
-defineEndpoint<{ data: { value: boolean } }>({ method: 'GET', path: '/wrong-schema', validator: schema })
+const schemaInputResult: Promise<{ value: string }> = client.call(
+  schemaEndpoint,
+  {},
+)
+const asyncSchemaEndpoint = defineEndpoint({
+  method: 'GET',
+  path: '/async-schema',
+  validator: { parse: (value: unknown) => schema.parseAsync(value) },
+})
+const asyncSchemaResult: Promise<ReadonlyData<z.output<typeof schema>>> =
+  client.call(asyncSchemaEndpoint, {})
+defineEndpoint<{ data: { value: boolean } }>({
+  method: 'GET',
+  path: '/wrong-schema',
+  // @ts-expect-error validator output must agree with an explicit data declaration
+  validator: schema,
+})
 void [schemaResult, schemaInputResult, asyncSchemaResult]

@@ -5,24 +5,57 @@
   "type": "module",
   "license": "MIT",
   "author": "nwzxx",
-  "keywords": ["typescript", "http", "fetch", "axios", "cache", "frontend"],
-  "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" },
+  "keywords": [
+    "typescript",
+    "http",
+    "fetch",
+    "axios",
+    "cache",
+    "frontend"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
-    "./fetch": { "types": "./dist/adapters/fetch.d.ts", "import": "./dist/adapters/fetch.js" },
-    "./axios": { "types": "./dist/adapters/axios.d.ts", "import": "./dist/adapters/axios.js" },
-    "./cache": { "types": "./dist/cache/index.d.ts", "import": "./dist/cache/index.js" },
-    "./response/sends": { "types": "./dist/response/sends.d.ts", "import": "./dist/response/sends.js" },
-    "./compat/sends": { "types": "./dist/compat/sends/index.d.ts", "import": "./dist/compat/sends/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./fetch": {
+      "types": "./dist/adapters/fetch.d.ts",
+      "import": "./dist/adapters/fetch.js"
+    },
+    "./axios": {
+      "types": "./dist/adapters/axios.d.ts",
+      "import": "./dist/adapters/axios.js"
+    },
+    "./cache": {
+      "types": "./dist/cache/index.d.ts",
+      "import": "./dist/cache/index.js"
+    },
+    "./response/sends": {
+      "types": "./dist/response/sends.d.ts",
+      "import": "./dist/response/sends.js"
+    }
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "bun test",
+    "test:coverage": "node scripts/test-coverage.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test:commit": "node scripts/pre-commit.mjs",
     "prepare": "node -e \"if (require('node:fs').existsSync('.git')) import('husky').then(({ default: husky }) => husky())\"",
     "build": "node scripts/build.mjs",
@@ -38,6 +71,8 @@
   "devDependencies": {
     "@types/bun": "1.4.2",
     "husky": "9.1.7",
+    "prettier": "3.9.10",
+    "tsc-alias": "1.9.7",
     "typescript": "7.0.2",
     "typescript-min": "npm:typescript@5.0.4"
   }

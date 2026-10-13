@@ -20,12 +20,15 @@ npm install frontcache
 import { createClient } from 'frontcache'
 import { createFetchTransport } from 'frontcache/fetch'
 
-interface Member { id: string; name: string }
+interface Member {
+  id: string
+  name: string
+}
 
 const client = createClient({
   baseURL: '/api',
   transport: createFetchTransport(),
-  timeout: 15_000
+  timeout: 15_000,
 })
 
 const member = await client.get<Member>('/members/1')
@@ -43,7 +46,7 @@ import { createAxiosTransport } from 'frontcache/axios'
 
 const axiosClient = createClient({
   baseURL: '/api',
-  transport: createAxiosTransport()
+  transport: createAxiosTransport(),
 })
 ```
 
@@ -58,13 +61,13 @@ const memberDetail = defineEndpoint<{
 }>({
   method: 'GET',
   path: '/members/:id',
-  cache: { ttl: 30_000, tags: ['members'] }
+  cache: { ttl: 30_000, tags: ['members'] },
 })
 
 const detail = await client.call(memberDetail, { params: { id: '1' } })
 
 await client.withInvalidation(['members'], () =>
-  client.patch('/members/1', { name: '新名称' })
+  client.patch('/members/1', { name: '新名称' }),
 )
 client.invalidate({ tag: 'members' })
 client.dispose() // 使用结束时释放缓存与在途请求
@@ -82,7 +85,7 @@ import { z } from 'zod'
 const endpoint = defineEndpoint({
   method: 'GET',
   path: '/me',
-  validator: z.object({ id: z.string(), name: z.string() })
+  validator: z.object({ id: z.string(), name: z.string() }),
 })
 
 const me = await client.call(endpoint, {})
@@ -90,4 +93,4 @@ const me = await client.call(endpoint, {})
 
 异步校验使用 `validator: { parse: value => schema.parseAsync(value) }`。校验失败会拒绝请求，响应不会写入缓存。
 
-动态会话可通过 `session` 配置 token、刷新等待和 401 回调；认证查询使用缓存时需提供 `sessionVersion`，在身份变化时更新。业务响应可通过 `codec` 自定义，旧 sends 接口由 `frontcache/compat/sends` 提供。
+动态会话可通过 `session` 配置 token、刷新等待和 401 回调；认证查询使用缓存时需提供 `sessionVersion`，在身份变化时更新。业务响应可通过 `codec` 自定义。

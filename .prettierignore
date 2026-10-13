@@ -1,0 +1,14 @@
+node_modules/
+dist/
+out/
+artifacts/
+coverage/
+.cache/
+docs/
+verification/
+verficaction/
+.agent/
+.agents/
+.codex/
+bun.lock
+*.tgz
