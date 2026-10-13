@@ -12,6 +12,11 @@ import { root, run } from "./runtime.mjs";
 import { checkCoverage } from "./coverage-policy.mjs";
 
 run(process.execPath, ["--test", "scripts/coverage-policy.check.mjs"]);
+run(process.execPath, [
+  "--test",
+  "scripts/release-policy.check.mjs",
+  "scripts/release-cli.check.mjs",
+]);
 const directory = resolve(root, "coverage");
 mkdirSync(directory, { recursive: true });
 const files = [];
