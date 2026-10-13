@@ -1,4 +1,4 @@
-import { defineEndpoint, type Client } from "frontcache";
+import { defineEndpoint, type Client } from "requestkit";
 import { z } from "zod";
 
 const memberSchema = z.object({ id: z.string(), name: z.string() });

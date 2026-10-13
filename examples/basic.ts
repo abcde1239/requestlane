@@ -1,6 +1,6 @@
-import { createClient } from "frontcache";
-import { createFetchTransport } from "frontcache/fetch";
-import { createAxiosTransport } from "frontcache/axios";
+import { createClient } from "requestkit";
+import { createFetchTransport } from "requestkit/fetch";
+import { createAxiosTransport } from "requestkit/axios";
 
 export interface Member {
   id: string;

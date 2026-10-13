@@ -13,11 +13,11 @@
     "paths": {
       "@": ["./src/index.ts"],
       "@/*": ["./src/*"],
-      "frontcache": ["./src/index.ts"],
-      "frontcache/fetch": ["./src/adapters/fetch.ts"],
-      "frontcache/axios": ["./src/adapters/axios.ts"],
-      "frontcache/cache": ["./src/cache/index.ts"],
-      "frontcache/response/sends": ["./src/response/sends.ts"]
+      "requestkit": ["./src/index.ts"],
+      "requestkit/fetch": ["./src/adapters/fetch.ts"],
+      "requestkit/axios": ["./src/adapters/axios.ts"],
+      "requestkit/cache": ["./src/cache/index.ts"],
+      "requestkit/response/sends": ["./src/response/sends.ts"]
     },
     "verbatimModuleSyntax": true,
     "noEmit": true,

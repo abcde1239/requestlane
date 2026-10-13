@@ -1,8 +1,8 @@
-# frontcache
+# requestkit
 
-[![npm version](https://img.shields.io/npm/v/frontcache)](https://www.npmjs.com/package/frontcache)
-[![npm downloads](https://img.shields.io/npm/dm/frontcache)](https://www.npmjs.com/package/frontcache)
-[![license](https://img.shields.io/npm/l/frontcache)](./LICENSE)
+[![npm version](https://img.shields.io/npm/v/requestkit)](https://www.npmjs.com/package/requestkit)
+[![npm downloads](https://img.shields.io/npm/dm/requestkit)](https://www.npmjs.com/package/requestkit)
+[![license](https://img.shields.io/npm/l/requestkit)](./LICENSE)
 
 框架无关的 TypeScript 前端通信包，包含常见的会话请求与基础缓存管理。
 
@@ -11,14 +11,14 @@
 ## 安装
 
 ```bash
-npm install frontcache
+npm install requestkit
 ```
 
 ## 快速使用
 
 ```ts
-import { createClient } from "frontcache";
-import { createFetchTransport } from "frontcache/fetch";
+import { createClient } from "requestkit";
+import { createFetchTransport } from "requestkit/fetch";
 
 const client = createClient({
   baseURL: "/api", // Node 环境使用完整 URL
@@ -31,7 +31,7 @@ await client.patch("/members/1", { name: "新名称" });
 client.dispose(); // 应用或模块不再使用该实例时释放资源
 ```
 
-需要 Axios 时，改用 `createAxiosTransport()`（从 `frontcache/axios` 导入）。泛型提供编译期约束；运行时校验与缓存通过 `defineEndpoint` 配置。
+需要 Axios 时，改用 `createAxiosTransport()`（从 `requestkit/axios` 导入）。泛型提供编译期约束；运行时校验与缓存通过 `defineEndpoint` 配置。
 
 ## [相关文档](./USAGE.md)
 
@@ -44,8 +44,8 @@ client.dispose(); // 应用或模块不再使用该实例时释放资源
 
 ## npm 信息
 
-包名：[`frontcache`](https://www.npmjs.com/package/frontcache) · 许可证：[MIT](./LICENSE) · [源码](https://github.com/abcde1239/frontcache) · [问题反馈](https://github.com/abcde1239/frontcache/issues)
+包名：[`requestkit`](https://www.npmjs.com/package/requestkit) · 许可证：[MIT](./LICENSE) · [源码](https://github.com/abcde1239/requestkit) · [问题反馈](https://github.com/abcde1239/requestkit/issues)
 
 ```bash
-npm view frontcache version
+npm view requestkit version
 ```

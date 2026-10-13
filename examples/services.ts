@@ -1,4 +1,4 @@
-import { BaseService, defineEndpoint, type Client } from "frontcache";
+import { BaseService, defineEndpoint, type Client } from "requestkit";
 
 interface Member {
   id: string;

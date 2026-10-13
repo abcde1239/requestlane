@@ -1,10 +1,18 @@
 {
-  "name": "frontcache",
+  "name": "requestkit",
   "version": "0.1.2",
   "description": "Typed, framework-independent HTTP clients with opt-in memory caching and Axios/Fetch transports",
   "type": "module",
   "license": "MIT",
   "author": "nwzxx",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abcde1239/requestkit.git"
+  },
+  "homepage": "https://github.com/abcde1239/requestkit#readme",
+  "bugs": {
+    "url": "https://github.com/abcde1239/requestkit/issues"
+  },
   "keywords": [
     "typescript",
     "http",

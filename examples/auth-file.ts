@@ -1,5 +1,5 @@
-import { createClient, type Client } from "frontcache";
-import { createFetchTransport } from "frontcache/fetch";
+import { createClient, type Client } from "requestkit";
+import { createFetchTransport } from "requestkit/fetch";
 
 interface LoginResult {
   token: string;

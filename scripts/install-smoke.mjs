@@ -12,11 +12,11 @@ import { createRequire } from "node:module";
 import { npm, run } from "./runtime.mjs";
 
 export function installSmoke(tarball) {
-  const directory = mkdtempSync(join(tmpdir(), "frontcache-npm-install-"));
+  const directory = mkdtempSync(join(tmpdir(), "requestkit-npm-install-"));
   writeFileSync(
     join(directory, "package.json"),
     JSON.stringify({
-      name: "frontcache-consumer",
+      name: "requestkit-consumer",
       private: true,
       type: "module",
     }),
@@ -36,14 +36,14 @@ export function installSmoke(tarball) {
     { cwd: directory },
   );
   const require = createRequire(join(directory, "smoke.mjs"));
-  assert(require.resolve("axios"), "安装 frontcache 应自动安装 Axios");
-  assert(require.resolve("zod"), "安装 frontcache 应自动安装 Zod");
+  assert(require.resolve("axios"), "安装 requestkit 应自动安装 Axios");
+  assert(require.resolve("zod"), "安装 requestkit 应自动安装 Zod");
   for (const dependency of ["husky", "typescript"])
     assert.throws(
       () => require.resolve(dependency),
       `生产安装不应包含 ${dependency}`,
     );
-  const installed = join(directory, "node_modules/frontcache");
+  const installed = join(directory, "node_modules/requestkit");
   const metadata = JSON.parse(
     readFileSync(join(installed, "package.json"), "utf8"),
   );
@@ -122,13 +122,13 @@ export function installSmoke(tarball) {
     join(directory, "smoke.mjs"),
     `
 import assert from 'node:assert/strict'
-import { createClient, defineEndpoint } from 'frontcache'
-import { createFetchTransport } from 'frontcache/fetch'
-import { ReadCache } from 'frontcache/cache'
-import { sendsCodec } from 'frontcache/response/sends'
+import { createClient, defineEndpoint } from 'requestkit'
+import { createFetchTransport } from 'requestkit/fetch'
+import { ReadCache } from 'requestkit/cache'
+import { sendsCodec } from 'requestkit/response/sends'
 import axios from 'axios'
 import { z } from 'zod'
-import { createAxiosTransport } from 'frontcache/axios'
+import { createAxiosTransport } from 'requestkit/axios'
 const client = createClient({ transport: createFetchTransport({ fetcher: async () => new Response('42') }) })
 assert.equal(await client.call(defineEndpoint({ method: 'GET', path: '/answer', cache: true }), {}), 42)
 assert.equal(await new ReadCache().get('answer', async () => 42), 42)

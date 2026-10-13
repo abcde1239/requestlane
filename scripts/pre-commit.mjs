@@ -31,7 +31,7 @@ assert.equal(
 );
 
 const temporaryRoot = resolve(tmpdir());
-const snapshot = mkdtempSync(join(temporaryRoot, "frontcache-pre-commit-"));
+const snapshot = mkdtempSync(join(temporaryRoot, "requestkit-pre-commit-"));
 const dependencyLink = join(snapshot, "node_modules");
 let linked = false;
 try {
@@ -91,7 +91,7 @@ try {
   if (linked) unlinkSync(dependencyLink);
   const localPath = relative(temporaryRoot, snapshot);
   assert(
-    localPath.startsWith("frontcache-pre-commit-") &&
+    localPath.startsWith("requestkit-pre-commit-") &&
       !localPath.includes(sep) &&
       !isAbsolute(localPath),
     "临时目录越界，拒绝清理",
