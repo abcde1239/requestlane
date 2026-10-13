@@ -17,7 +17,7 @@ npm run verify
 ```bash
 npm login --registry=https://registry.npmjs.org/
 npm run verify
-npm publish ./artifacts/requestkit-0.1.2.tgz --access public --tag latest --registry=https://registry.npmjs.org/
+npm publish ./artifacts/requestkit-0.1.3.tgz --access public --tag latest --registry=https://registry.npmjs.org/
 ```
 
 首次成功后，在 [npm 包设置](https://www.npmjs.com/package/requestkit/access) 中添加 GitHub Actions Trusted Publisher：
