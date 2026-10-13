@@ -1,25 +1,25 @@
-import type { ResponseType } from '@/types/common'
-import type { TransportResponse } from '@/types/transport'
-import { InvalidResponseError } from '@/response/errors'
+import type { ResponseType } from "@/types/common";
+import type { TransportResponse } from "@/types/transport";
+import { InvalidResponseError } from "@/response/errors";
 export function decodeText(
   text: string,
   type: ResponseType,
   status: number,
   method: string,
 ): unknown {
-  if (method === 'HEAD' || status === 204) return undefined
-  if (type === 'text') return text
+  if (method === "HEAD" || status === 204) return undefined;
+  if (type === "text") return text;
   if (status < 200 || status >= 300) {
     try {
-      return text ? JSON.parse(text) : undefined
+      return text ? JSON.parse(text) : undefined;
     } catch {
-      return text
+      return text;
     }
   }
   try {
-    return JSON.parse(text)
+    return JSON.parse(text);
   } catch (error) {
-    throw new InvalidResponseError('Invalid JSON response', error)
+    throw new InvalidResponseError("Invalid JSON response", error);
   }
 }
 export function normalizeResponse<T>(
@@ -33,5 +33,5 @@ export function normalizeResponse<T>(
         String(value),
       ]),
     ),
-  }
+  };
 }

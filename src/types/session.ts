@@ -1,11 +1,11 @@
-import type { Scope } from '@/types/common'
+import type { Scope } from "@/types/common";
 
 export interface SessionOptions {
   /**
    * 获取当前会话的Auth Token。
    *
    */
-  token?: () => string
+  token?: () => string;
 
   /**
    * 确保获取到可用于当前请求的最新 Token。
@@ -14,7 +14,7 @@ export interface SessionOptions {
    * 可通过该方法获取更新后的 Token。
    *
    */
-  ensureFreshToken?: () => Promise<string>
+  ensureFreshToken?: () => Promise<string>;
 
   /**
    * 获取当前会话的版本标识。
@@ -23,7 +23,7 @@ export interface SessionOptions {
    *
    * @returns 当前会话的作用域或版本标识。
    */
-  sessionVersion?: () => Scope
+  sessionVersion?: () => Scope;
 
   /**
    * 处理未授权状态。
@@ -31,12 +31,12 @@ export interface SessionOptions {
    * 例如，Token 失效后执行会话清理、重置登录状态
    * 或引导用户重新登录。
    */
-  onUnauthorized?: () => void | Promise<void>
+  onUnauthorized?: () => void | Promise<void>;
 
   /**
    * 是否要求请求必须携带有效的 Token。
    *
    * 具体的校验时机和失败行为由请求封装层决定。
    */
-  requireToken?: boolean
+  requireToken?: boolean;
 }

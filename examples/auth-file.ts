@@ -1,4 +1,4 @@
-import type { Client } from '../src/index.js'
+import type { Client } from "../src/index.js";
 
 /** 登录路径、刷新持久化、并发合并由应用负责，不在核心中固定。 */
 export class AppAuth<User> {
@@ -7,12 +7,12 @@ export class AppAuth<User> {
     return this.http.post<
       { token: string; user: User },
       { identifier: string; password: string }
-    >('/token', { identifier, password }, { anonymous: true })
+    >("/token", { identifier, password }, { anonymous: true });
   }
   refresh(token: string) {
-    return this.http.post<{ new_token: string }>('/refresh', undefined, {
+    return this.http.post<{ new_token: string }>("/refresh", undefined, {
       sessionToken: token,
-    })
+    });
   }
 }
 export class AppFiles<Authorization> {
@@ -32,9 +32,9 @@ export class AppFiles<Authorization> {
     const authorization = await this.http.post<
       Authorization,
       { target: string }
-    >('/sts', { target }, { signal })
-    const url = await this.uploader(file, authorization, signal)
-    if (!url) throw new Error('Upload did not return a URL')
-    return url
+    >("/sts", { target }, { signal });
+    const url = await this.uploader(file, authorization, signal);
+    if (!url) throw new Error("Upload did not return a URL");
+    return url;
   }
 }

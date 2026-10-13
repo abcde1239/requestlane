@@ -1,7 +1,7 @@
 export type Method =
-  'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
-export type ResponseType = 'json' | 'text' | 'blob' | 'arraybuffer'
-export type Scope = string | number
+  "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
+export type ResponseType = "json" | "text" | "blob" | "arraybuffer";
+export type Scope = string | number;
 // 用于递归转换数据为只读
 export type ReadonlyData<T> = T extends (...args: never[]) => unknown
   ? T
@@ -11,4 +11,4 @@ export type ReadonlyData<T> = T extends (...args: never[]) => unknown
       ? { readonly [K in keyof T]: ReadonlyData<T[K]> }
       : T extends object
         ? { readonly [K in keyof T]: ReadonlyData<T[K]> }
-        : T
+        : T;

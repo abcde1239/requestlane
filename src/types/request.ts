@@ -1,9 +1,9 @@
-import type { Method, ResponseType } from '@/types/common'
+import type { Method, ResponseType } from "@/types/common";
 
 export interface RequestOptions {
-  signal?: AbortSignal
-  timeout?: number
-  anonymous?: boolean
+  signal?: AbortSignal;
+  timeout?: number;
+  anonymous?: boolean;
 
   /**
    *
@@ -11,22 +11,22 @@ export interface RequestOptions {
    * @type {string}
    * @memberof RequestOptions
    */
-  sessionToken?: string
-  bypassCache?: boolean
-  headers?: Readonly<Record<string, string>>
-  credentials?: RequestCredentials
-  responseType?: ResponseType
-  onError?: (error: unknown) => void | Promise<void>
+  sessionToken?: string;
+  bypassCache?: boolean;
+  headers?: Readonly<Record<string, string>>;
+  credentials?: RequestCredentials;
+  responseType?: ResponseType;
+  onError?: (error: unknown) => void | Promise<void>;
 }
 export interface RequestConfig<
   Body = unknown,
   Query = unknown,
   Params = unknown,
 > extends RequestOptions {
-  url: string
-  method?: Method
-  body?: Body
-  query?: Query
-  params?: Params
-  querySerializer?: (query: Query) => string
+  url: string;
+  method?: Method;
+  body?: Body;
+  query?: Query;
+  params?: Params;
+  querySerializer?: (query: Query) => string;
 }

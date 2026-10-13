@@ -1,4 +1,4 @@
-import type { Method, ResponseType } from '@/types/common'
+import type { Method, ResponseType } from "@/types/common";
 
 /**
  * 描述一次 HTTP 请求在传输层所需的配置。
@@ -20,13 +20,13 @@ import type { Method, ResponseType } from '@/types/common'
  * };
  */
 export interface TransportRequest {
-  url: string
-  method: Method
-  headers: Readonly<Record<string, string>>
-  body?: BodyInit
-  signal: AbortSignal
-  responseType: ResponseType
-  credentials?: RequestCredentials
+  url: string;
+  method: Method;
+  headers: Readonly<Record<string, string>>;
+  body?: BodyInit;
+  signal: AbortSignal;
+  responseType: ResponseType;
+  credentials?: RequestCredentials;
 }
 /**
  * 描述一次 HTTP 响应在传输层的标准化结构。
@@ -50,15 +50,15 @@ export interface TransportRequest {
  * };
  */
 export interface TransportResponse<T = unknown> {
-  status: number
-  statusText: string
-  headers: Readonly<Record<string, string>>
-  url: string
-  data: T
+  status: number;
+  statusText: string;
+  headers: Readonly<Record<string, string>>;
+  url: string;
+  data: T;
 }
 
 export interface Transport {
   /** 原生拦截器等无法观察的变化存在时，适配器应关闭自动缓存。 */
-  readonly cacheSafe?: boolean
-  send(request: TransportRequest): Promise<TransportResponse>
+  readonly cacheSafe?: boolean;
+  send(request: TransportRequest): Promise<TransportResponse>;
 }

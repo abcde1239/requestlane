@@ -1,42 +1,42 @@
-import { cancelled } from '@/response/errors'
-import { raceSignal } from '@/request/lifecycle'
+import { cancelled } from "@/response/errors";
+import { raceSignal } from "@/request/lifecycle";
 
-import { checkTTL } from '@/utils/checkTTL'
+import { checkTTL } from "@/utils/checkTTL";
 import type {
   CacheInvalidationFilter,
   CacheReadOptions,
   Entry,
-} from '@/types/cache'
+} from "@/types/cache";
 
 export class ReadCache {
-  private entries = new Map<string, Entry>()
-  private active = new Set<Entry>()
+  private entries = new Map<string, Entry>();
+  private active = new Set<Entry>();
 
   constructor(
     private readonly ttl = 30000,
     private readonly capacity = 20,
   ) {
-    checkTTL(ttl)
+    checkTTL(ttl);
 
     if (!Number.isInteger(capacity) || capacity < 1) {
-      throw new TypeError('capacity must be a positive integer')
+      throw new TypeError("capacity must be a positive integer");
     }
   }
 
   get size(): number {
-    return this.entries.size
+    return this.entries.size;
   }
 
   get pending(): number {
-    return this.active.size
+    return this.active.size;
   }
 
   clear(): void {
-    this.invalidate()
+    this.invalidate();
   }
 
   invalidate(filter: CacheInvalidationFilter = {}): void {
-    const entries = new Set([...this.entries.values(), ...this.active])
+    const entries = new Set([...this.entries.values(), ...this.active]);
 
     for (const entry of entries) {
       if (
@@ -44,23 +44,23 @@ export class ReadCache {
         entry.key !== filter.key &&
         entry.alias !== filter.key
       ) {
-        continue
+        continue;
       }
 
       if (filter.tag !== undefined && !entry.tags.includes(filter.tag)) {
-        continue
+        continue;
       }
 
       if (filter.prefix !== undefined && !entry.key.startsWith(filter.prefix)) {
-        continue
+        continue;
       }
 
       if (this.entries.get(entry.key) === entry) {
-        this.entries.delete(entry.key)
+        this.entries.delete(entry.key);
       }
 
-      this.active.delete(entry)
-      entry.controller.abort(cancelled())
+      this.active.delete(entry);
+      entry.controller.abort(cancelled());
     }
   }
 
@@ -70,28 +70,28 @@ export class ReadCache {
     signal?: AbortSignal,
     options: CacheReadOptions = {},
   ): Promise<T> {
-    const ttl = options.ttl ?? this.ttl
-    checkTTL(ttl)
+    const ttl = options.ttl ?? this.ttl;
+    checkTTL(ttl);
 
     if (signal?.aborted) {
-      return Promise.reject(signal.reason ?? cancelled())
+      return Promise.reject(signal.reason ?? cancelled());
     }
 
     const entry =
-      this.getValidEntry(key) ?? this.createEntry(key, load, ttl, options)
+      this.getValidEntry(key) ?? this.createEntry(key, load, ttl, options);
 
-    return this.subscribe<T>(key, entry, signal)
+    return this.subscribe<T>(key, entry, signal);
   }
 
   private getValidEntry(key: string): Entry | undefined {
-    const entry = this.entries.get(key)
+    const entry = this.entries.get(key);
 
     if (entry?.settled && entry.expires <= Date.now()) {
-      this.entries.delete(key)
-      return undefined
+      this.entries.delete(key);
+      return undefined;
     }
 
-    return entry
+    return entry;
   }
 
   private createEntry<T>(
@@ -101,14 +101,14 @@ export class ReadCache {
     options: CacheReadOptions,
   ): Entry {
     while (this.entries.size >= this.capacity) {
-      const oldest = this.entries.keys().next().value
+      const oldest = this.entries.keys().next().value;
 
-      if (oldest === undefined) break
+      if (oldest === undefined) break;
 
-      this.entries.delete(oldest)
+      this.entries.delete(oldest);
     }
 
-    const controller = new AbortController()
+    const controller = new AbortController();
 
     const entry: Entry = {
       key,
@@ -119,40 +119,40 @@ export class ReadCache {
       consumers: 0,
       settled: false,
       expires: 0,
-    }
+    };
 
     entry.promise = Promise.resolve()
       .then(() => {
-        controller.signal.throwIfAborted()
+        controller.signal.throwIfAborted();
 
         return raceSignal(
           Promise.resolve(load(controller.signal)),
           controller.signal,
-        )
+        );
       })
       .then((data) => {
-        controller.signal.throwIfAborted()
+        controller.signal.throwIfAborted();
 
-        entry.settled = true
-        entry.expires = Date.now() + ttl
+        entry.settled = true;
+        entry.expires = Date.now() + ttl;
 
-        return data
+        return data;
       })
       .catch((error) => {
         if (this.entries.get(key) === entry) {
-          this.entries.delete(key)
+          this.entries.delete(key);
         }
 
-        throw error
+        throw error;
       })
       .finally(() => {
-        this.active.delete(entry)
-      })
+        this.active.delete(entry);
+      });
 
-    this.active.add(entry)
-    this.entries.set(key, entry)
+    this.active.add(entry);
+    this.entries.set(key, entry);
 
-    return entry
+    return entry;
   }
 
   private subscribe<T>(
@@ -160,64 +160,64 @@ export class ReadCache {
     entry: Entry,
     signal?: AbortSignal,
   ): Promise<T> {
-    entry.consumers++
+    entry.consumers++;
 
     return new Promise<T>((resolve, reject) => {
-      let finished = false
+      let finished = false;
 
       const finish = (): boolean => {
-        if (finished) return false
+        if (finished) return false;
 
-        finished = true
+        finished = true;
 
-        signal?.removeEventListener('abort', cancelConsumer)
+        signal?.removeEventListener("abort", cancelConsumer);
 
-        entry.controller.signal.removeEventListener('abort', cancelShared)
+        entry.controller.signal.removeEventListener("abort", cancelShared);
 
-        entry.consumers--
+        entry.consumers--;
 
-        return true
-      }
+        return true;
+      };
 
       const cancelConsumer = (): void => {
-        if (!finish()) return
+        if (!finish()) return;
 
-        reject(signal?.reason ?? cancelled())
+        reject(signal?.reason ?? cancelled());
 
         if (!entry.settled && entry.consumers === 0) {
           if (this.entries.get(key) === entry) {
-            this.entries.delete(key)
+            this.entries.delete(key);
           }
 
-          entry.controller.abort(cancelled())
+          entry.controller.abort(cancelled());
         }
-      }
+      };
 
       const cancelShared = (): void => {
-        if (!finish()) return
+        if (!finish()) return;
 
-        reject(entry.controller.signal.reason ?? cancelled())
-      }
+        reject(entry.controller.signal.reason ?? cancelled());
+      };
 
-      signal?.addEventListener('abort', cancelConsumer, { once: true })
+      signal?.addEventListener("abort", cancelConsumer, { once: true });
 
-      entry.controller.signal.addEventListener('abort', cancelShared, {
+      entry.controller.signal.addEventListener("abort", cancelShared, {
         once: true,
-      })
+      });
 
       entry.promise.then(
         (data) => {
-          if (finish()) resolve(data as T)
+          if (finish()) resolve(data as T);
         },
         (error) => {
-          if (finish()) reject(error)
+          if (finish()) reject(error);
         },
-      )
+      );
 
       // 处理订阅时共享请求已经被中止的情况。
       if (entry.controller.signal.aborted) {
-        cancelShared()
+        cancelShared();
       }
-    })
+    });
   }
 }
