@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "requestkit",
+      "name": "requestlane",
       "dependencies": {
         "axios": "^1.20.0",
         "zod": "4.6.5",

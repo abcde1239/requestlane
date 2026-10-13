@@ -6,7 +6,7 @@ import {
   releasePlan,
 } from "./release-policy.mjs";
 
-const metadata = (version) => ({ name: "requestkit", version });
+const metadata = (version) => ({ name: "requestlane", version });
 const candidate = releaseCandidate(
   metadata("0.2.0"),
   metadata("0.1.2"),
@@ -25,7 +25,7 @@ test("仅版本递增触发，手动运行可重试相同版本", () => {
   assert.deepEqual(candidate, {
     version: "0.2.0",
     tag: "latest",
-    tarball: "requestkit-0.2.0.tgz",
+    tarball: "requestlane-0.2.0.tgz",
   });
   assert.equal(
     releaseCandidate(metadata("0.1.2"), metadata("0.1.2"), "workflow_dispatch")

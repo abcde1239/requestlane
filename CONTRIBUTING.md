@@ -12,20 +12,20 @@ npm run verify
 
 ## 一次性发布配置
 
-`requestkit` 首次发布需要包维护者本机登录 npm 并完成 2FA。先通过完整验证，再发布生成的 tarball：
+`requestlane` 首次发布需要包维护者本机登录 npm 并完成 2FA。先通过完整验证，再发布生成的 tarball：
 
 ```bash
 npm login --registry=https://registry.npmjs.org/
 npm run verify
-npm publish ./artifacts/requestkit-0.1.3.tgz --access public --tag latest --registry=https://registry.npmjs.org/
+npm publish ./artifacts/requestlane-0.1.3.tgz --access public --tag latest --registry=https://registry.npmjs.org/
 ```
 
-首次成功后，在 [npm 包设置](https://www.npmjs.com/package/requestkit/access) 中添加 GitHub Actions Trusted Publisher：
+首次成功后，在 [npm 包设置](https://www.npmjs.com/package/requestlane/access) 中添加 GitHub Actions Trusted Publisher：
 
 | 字段                 | 值                  |
 | -------------------- | ------------------- |
 | Organization or user | `abcde1239`         |
-| Repository           | `requestkit`        |
+| Repository           | `requestlane`       |
 | Workflow filename    | `publish.yml`       |
 | Environment name     | 留空                |
 | Allowed actions      | 允许发布（publish） |

@@ -77,7 +77,7 @@ export async function browserSmoke() {
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const port = server.address().port;
-  const profile = mkdtempSync(join(tmpdir(), "requestkit-chrome-"));
+  const profile = mkdtempSync(join(tmpdir(), "requestlane-chrome-"));
   try {
     const child = spawn(
       chrome,

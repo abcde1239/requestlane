@@ -1,5 +1,5 @@
 {
-  "name": "requestkit",
+  "name": "requestlane",
   "version": "0.1.3",
   "description": "Typed, framework-independent HTTP clients with opt-in memory caching and Axios/Fetch transports",
   "type": "module",
@@ -7,11 +7,11 @@
   "author": "nwzxx",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/abcde1239/requestkit.git"
+    "url": "git+https://github.com/abcde1239/requestlane.git"
   },
-  "homepage": "https://github.com/abcde1239/requestkit#readme",
+  "homepage": "https://github.com/abcde1239/requestlane#readme",
   "bugs": {
-    "url": "https://github.com/abcde1239/requestkit/issues"
+    "url": "https://github.com/abcde1239/requestlane/issues"
   },
   "keywords": [
     "typescript",

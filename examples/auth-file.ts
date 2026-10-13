@@ -1,5 +1,5 @@
-import { createClient, type Client } from "requestkit";
-import { createFetchTransport } from "requestkit/fetch";
+import { createClient, type Client } from "requestlane";
+import { createFetchTransport } from "requestlane/fetch";
 
 interface LoginResult {
   token: string;

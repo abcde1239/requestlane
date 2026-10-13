@@ -35,8 +35,8 @@ export function compareVersions(left, right) {
 }
 
 export function releaseCandidate(current, previous, event) {
-  if (current.name !== "requestkit" || current.private)
-    throw new Error("只允许发布公开的 requestkit 包");
+  if (current.name !== "requestlane" || current.private)
+    throw new Error("只允许发布公开的 requestlane 包");
   parseVersion(current.version);
   if (event !== "push" && event !== "workflow_dispatch")
     throw new Error(`不允许的发布事件：${event}`);
@@ -55,7 +55,7 @@ export function releaseCandidate(current, previous, event) {
 export async function releasePlan(candidate, fetchRegistry = fetch) {
   if (!candidate) return { publish: false, reason: "版本未变化" };
   const response = await fetchRegistry(
-    "https://registry.npmjs.org/requestkit",
+    "https://registry.npmjs.org/requestlane",
     {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(30_000),
@@ -63,7 +63,7 @@ export async function releasePlan(candidate, fetchRegistry = fetch) {
   );
   if (response.status === 404)
     throw new Error(
-      "requestkit 尚未发布，请先手动首次发布并配置 npm Trusted Publisher（见 CONTRIBUTING.md）",
+      "requestlane 尚未发布，请先手动首次发布并配置 npm Trusted Publisher（见 CONTRIBUTING.md）",
     );
   if (!response.ok)
     throw new Error(`npm registry 查询失败：HTTP ${response.status}`);

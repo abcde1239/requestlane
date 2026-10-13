@@ -1,30 +1,30 @@
-# requestkit 使用文档
+# requestlane 使用文档
 
 [返回 README](./README.md)
 
 ## 安装与入口
 
 ```bash
-npm install requestkit
+npm install requestlane
 ```
 
 Axios 和 Zod 是自动安装的运行依赖。包提供 ESM，适用于现代浏览器和 Node 20+；核心类型支持 TypeScript 5.0+，使用 Zod 时请满足该库的 TypeScript 版本要求。
 
-| 入口                        | 用途                                        |
-| --------------------------- | ------------------------------------------- |
-| `requestkit`                | Client、类型端点、codec、错误与 BaseService |
-| `requestkit/fetch`          | 原生 Fetch 传输                             |
-| `requestkit/axios`          | Axios 传输                                  |
-| `requestkit/cache`          | 独立内存 ReadCache                          |
-| `requestkit/response/sends` | 可选的 code/msg/data 响应协议助手           |
+| 入口                         | 用途                                        |
+| ---------------------------- | ------------------------------------------- |
+| `requestlane`                | Client、类型端点、codec、错误与 BaseService |
+| `requestlane/fetch`          | 原生 Fetch 传输                             |
+| `requestlane/axios`          | Axios 传输                                  |
+| `requestlane/cache`          | 独立内存 ReadCache                          |
+| `requestlane/response/sends` | 可选的 code/msg/data 响应协议助手           |
 
 下文假设接口位于 `/api`；Node 环境应使用 `https://example.com/api` 等完整地址。请求路径、登录返回结构与业务字段需按实际接口调整。
 
 ## 创建客户端与发送请求
 
 ```ts
-import { createClient } from "requestkit";
-import { createFetchTransport } from "requestkit/fetch";
+import { createClient } from "requestlane";
+import { createFetchTransport } from "requestlane/fetch";
 
 const client = createClient({
   baseURL: "/api",
@@ -63,7 +63,7 @@ const blob = await client.get<Blob>("/download", { responseType: "blob" });
 选择 Axios 时替换传输配置：
 
 ```ts
-import { createAxiosTransport } from "requestkit/axios";
+import { createAxiosTransport } from "requestlane/axios";
 
 const axiosClient = createClient({
   baseURL: "/api",
@@ -78,7 +78,7 @@ const axiosClient = createClient({
 将端点定义在模块作用域，复用同一端点对象：
 
 ```ts
-import { defineEndpoint } from "requestkit";
+import { defineEndpoint } from "requestlane";
 import { z } from "zod";
 
 const memberSchema = z.object({ id: z.string(), name: z.string() });
@@ -167,7 +167,7 @@ const sessionClient = createClient({
 ## 超时、取消与错误
 
 ```ts
-import { classifyError, isRequestCancelled } from "requestkit";
+import { classifyError, isRequestCancelled } from "requestlane";
 
 const controller = new AbortController();
 const pending = client.get("/slow", {
@@ -195,7 +195,7 @@ try {
 默认 codec 直接返回 JSON 数据。若接口返回 `{ code, msg, data }`，可显式启用协议助手：
 
 ```ts
-import { sendsCodec } from "requestkit/response/sends";
+import { sendsCodec } from "requestlane/response/sends";
 
 const envelopeClient = createClient({
   baseURL: "/api",
@@ -213,4 +213,4 @@ const member = await envelopeClient.get<Member>("/members/1"); // 返回 data
 
 应用可直接组合 Client，也可继承 `BaseService` 集中定义端点与写失效规则，见 [services.ts](./examples/services.ts)。Client 由应用持有并共享，不要每次请求都创建新实例；实例不再使用时调用 `dispose()`，释放缓存并取消在途请求。
 
-示例使用假定的 `/members`、`/auth/login`、`/files` 接口，不会在导入时发送请求。示例源码随包放在 `examples` 目录，也可从[源码仓库](https://github.com/abcde1239/requestkit/tree/master/examples)复制到已安装 requestkit 的项目，按自己的 API 调整。
+示例使用假定的 `/members`、`/auth/login`、`/files` 接口，不会在导入时发送请求。示例源码随包放在 `examples` 目录，也可从[源码仓库](https://github.com/abcde1239/requestlane/tree/master/examples)复制到已安装 requestlane 的项目，按自己的 API 调整。

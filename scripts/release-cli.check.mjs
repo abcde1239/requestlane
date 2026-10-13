@@ -8,7 +8,7 @@ import { test } from "node:test";
 
 test("真实 push 范围比较、手动重试及错误路径不会产生可发布输出", () => {
   const base = resolve(tmpdir());
-  const directory = mkdtempSync(join(base, "requestkit-release-test-"));
+  const directory = mkdtempSync(join(base, "requestlane-release-test-"));
   const cli = new URL("./release-plan.mjs", import.meta.url);
   const output = join(directory, "github-output");
   const mock = join(directory, "registry-mock.mjs");
@@ -26,7 +26,7 @@ test("真实 push 范围比较、手动重试及错误路径不会产生可发�
   const commit = (version, description) => {
     writeFileSync(
       packageFile,
-      JSON.stringify({ name: "requestkit", version, description }),
+      JSON.stringify({ name: "requestlane", version, description }),
     );
     git("add", "package.json");
     git("commit", "--quiet", "-m", "test");
@@ -80,7 +80,7 @@ test("真实 push 范围比较、手动重试及错误路径不会产生可发�
   } finally {
     const child = relative(base, directory);
     assert(
-      child.startsWith("requestkit-release-test-") &&
+      child.startsWith("requestlane-release-test-") &&
         !child.includes(sep) &&
         !isAbsolute(child),
     );

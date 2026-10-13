@@ -1,4 +1,4 @@
-import { defineEndpoint, type Client } from "requestkit";
+import { defineEndpoint, type Client } from "requestlane";
 import { z } from "zod";
 
 const memberSchema = z.object({ id: z.string(), name: z.string() });

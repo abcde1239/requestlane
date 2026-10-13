@@ -1,6 +1,6 @@
-import { createClient } from "requestkit";
-import { createFetchTransport } from "requestkit/fetch";
-import { createAxiosTransport } from "requestkit/axios";
+import { createClient } from "requestlane";
+import { createFetchTransport } from "requestlane/fetch";
+import { createAxiosTransport } from "requestlane/axios";
 
 export interface Member {
   id: string;

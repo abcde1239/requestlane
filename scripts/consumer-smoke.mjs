@@ -15,8 +15,8 @@ import assert from "node:assert/strict";
 import { root, run } from "./runtime.mjs";
 
 export function consumers(tarball) {
-  const directory = mkdtempSync(join(tmpdir(), "requestkit-consumer-"));
-  const install = join(directory, "node_modules/requestkit");
+  const directory = mkdtempSync(join(tmpdir(), "requestlane-consumer-"));
+  const install = join(directory, "node_modules/requestlane");
   mkdirSync(install, { recursive: true });
   run("tar", ["-xf", tarball, "-C", install, "--strip-components=1"]);
   const require = createRequire(join(directory, "consumer.mjs"));
@@ -33,9 +33,9 @@ export function consumers(tarball) {
     join(directory, "consumer.mjs"),
     `
 import assert from 'node:assert/strict'
-import { createClient, defineEndpoint } from 'requestkit'
-import { createFetchTransport } from 'requestkit/fetch'
-import { sendsCodec } from 'requestkit/response/sends'
+import { createClient, defineEndpoint } from 'requestlane'
+import { createFetchTransport } from 'requestlane/fetch'
+import { sendsCodec } from 'requestlane/response/sends'
 let requests = 0
 const transport = createFetchTransport({ fetcher: async () => { requests++; return new Response(JSON.stringify({ msg: 'ok', data: { id: 'member' } })) } })
 const endpoint = defineEndpoint({ method: 'GET', path: '/items', cache: true })
@@ -49,9 +49,9 @@ client.dispose()
   writeFileSync(
     join(directory, "consumer.ts"),
     `
-import { createClient, defineEndpoint, type ReadonlyData, type ResponseType, type RequestOptions, type EndpointOptions, type TransportRequest, type ErrorKind, type ErrorInfo, type ErrorDetails } from 'requestkit'
-import { createFetchTransport } from 'requestkit/fetch'
-import type { CacheReadOptions, CacheInvalidationFilter } from 'requestkit/cache'
+import { createClient, defineEndpoint, type ReadonlyData, type ResponseType, type RequestOptions, type EndpointOptions, type TransportRequest, type ErrorKind, type ErrorInfo, type ErrorDetails } from 'requestlane'
+import { createFetchTransport } from 'requestlane/fetch'
+import type { CacheReadOptions, CacheInvalidationFilter } from 'requestlane/cache'
 const responseTypes: ResponseType[] = ['json', 'text', 'blob', 'arraybuffer']
 for (const responseType of responseTypes) {
   const options: RequestOptions = { responseType }
@@ -64,7 +64,7 @@ const filter: CacheInvalidationFilter = { tag: 'items' }
 const errorKind: ErrorKind = 'network'
 const errorInfo: ErrorInfo = { kind: errorKind, message: 'offline', retryable: true }
 const errorDetails: ErrorDetails = { cause: new Error('offline') }
-// @ts-expect-error DOM response visibility is not a requestkit representation
+// @ts-expect-error DOM response visibility is not a requestlane representation
 const invalidResponseType: ResponseType = 'opaque'
 void [cacheOptions, filter, invalidResponseType, errorInfo, errorDetails]
 interface Member { id: string }
@@ -150,8 +150,8 @@ void result
     `
 import assert from 'node:assert/strict'
 import axios from 'axios'
-import { createClient } from 'requestkit'
-import { createAxiosTransport } from 'requestkit/axios'
+import { createClient } from 'requestlane'
+import { createAxiosTransport } from 'requestlane/axios'
 const adapter = async config => ({ data: JSON.stringify({ msg: 'ok', data: 7 }), status: 200, statusText: 'OK', headers: {}, config })
 const client = createClient({ transport: createAxiosTransport({ instance: axios.create({ adapter }) }) })
 assert.equal((await client.get('/items')).data, 7)
@@ -164,9 +164,9 @@ client.dispose()
     `
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
-import { createClient } from 'requestkit'
-import { createFetchTransport } from 'requestkit/fetch'
-import { createAxiosTransport } from 'requestkit/axios'
+import { createClient } from 'requestlane'
+import { createFetchTransport } from 'requestlane/fetch'
+import { createAxiosTransport } from 'requestlane/axios'
 const server = createServer(async (request, response) => {
   const chunks = []; for await (const chunk of request) chunks.push(chunk)
   const body = Buffer.concat(chunks)
@@ -196,7 +196,7 @@ console.log('[consumer] real Node HTTP JSON/form/binary/blob/multipart passed')
     readFileSync(join(directory, "consumer.ts"), "utf8") +
       `
 import axios from 'axios'
-import { createAxiosTransport } from 'requestkit/axios'
+import { createAxiosTransport } from 'requestlane/axios'
 const axiosClient = createClient({ transport: createAxiosTransport({ instance: axios.create() }) })
 void axiosClient
 `,
@@ -212,8 +212,8 @@ void axiosClient
     join(directory, "schema.ts"),
     `
 import { z } from 'zod'
-import { defineEndpoint, createClient, type ReadonlyData } from 'requestkit'
-import { createFetchTransport } from 'requestkit/fetch'
+import { defineEndpoint, createClient, type ReadonlyData } from 'requestlane'
+import { createFetchTransport } from 'requestlane/fetch'
 const schema = z.object({ value: z.string().transform(value => Number(value)) })
 const endpoint = defineEndpoint({ method: 'GET', path: '/schema', validator: schema })
 const asyncEndpoint = defineEndpoint({ method: 'GET', path: '/schema', validator: { parse: (value: unknown) => schema.parseAsync(value) } })

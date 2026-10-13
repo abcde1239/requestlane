@@ -1,4 +1,4 @@
-import { BaseService, defineEndpoint, type Client } from "requestkit";
+import { BaseService, defineEndpoint, type Client } from "requestlane";
 
 interface Member {
   id: string;
