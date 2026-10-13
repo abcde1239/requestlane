@@ -66,12 +66,39 @@ export function installSmoke(tarball) {
   );
   for (const name of readdirSync(installed))
     assert(
-      ["dist", "README.md", "LICENSE", "package.json"].includes(name),
+      [
+        "dist",
+        "README.md",
+        "USAGE.md",
+        "examples",
+        "LICENSE",
+        "package.json",
+      ].includes(name),
       `产物含非公开文件：${name}`,
     );
-  for (const entry of Object.values(metadata.exports))
+  if (tarball.endsWith(".tgz")) {
+    assert(existsSync(join(installed, "USAGE.md")), "使用文档必须随包分发");
+    assert(
+      readFileSync(join(installed, "README.md"), "utf8").includes(
+        "(./USAGE.md)",
+      ),
+      "README 必须链接使用文档",
+    );
+    for (const file of [
+      "basic.ts",
+      "cache-schema.ts",
+      "auth-file.ts",
+      "services.ts",
+    ])
+      assert(
+        existsSync(join(installed, "examples", file)),
+        `缺少使用示例：${file}`,
+      );
+  }
+  for (const entry of Object.values(metadata.exports)) {
     for (const target of Object.values(entry))
       assert(existsSync(join(installed, target)), `缺少导出文件：${target}`);
+  }
   function checkMaps(directory) {
     for (const name of readdirSync(directory, { withFileTypes: true })) {
       const path = join(directory, name.name);

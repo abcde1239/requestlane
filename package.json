@@ -23,6 +23,8 @@
   "files": [
     "dist",
     "README.md",
+    "USAGE.md",
+    "examples",
     "LICENSE"
   ],
   "exports": {

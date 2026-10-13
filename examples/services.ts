@@ -1,103 +1,37 @@
-import {
-  BaseService,
-  type Client,
-  defineEndpoint,
-  createClient,
-  type SessionOptions,
-} from "../src/index.js";
-import { createFetchTransport } from "../src/adapters/fetch.js";
-import { sendsCodec } from "../src/response/sends.js";
+import { BaseService, defineEndpoint, type Client } from "frontcache";
 
-interface Section {
-  section_id: string;
-  title: string;
+interface Member {
+  id: string;
+  name: string;
 }
-interface Page<T> {
-  list: T[];
-  total?: number;
-}
-const sections = defineEndpoint<{ data: Page<Section> }>({
+
+const memberList = defineEndpoint<{
+  query: { page: number; limit: number };
+  data: { list: Member[]; total: number };
+}>({
   method: "GET",
-  path: "/sections",
-  cache: { tags: ["community"] },
+  path: "/members",
+  cache: { tags: ["members"] },
 });
-const posts = defineEndpoint<{
-  query: {
-    user_id?: string;
-    status: "draft" | "active";
-    p: number;
-    limit: number;
-  };
-  data: Page<{ post_id: string; title: string }>;
-}>({ method: "GET", path: "/user/posts", cache: { tags: ["community"] } });
-const members = defineEndpoint<{
-  data: Page<{ user_id: string; username: string }>;
-}>({ method: "GET", path: "/list", cache: { tags: ["members"] } });
-class CommonService {
-  constructor(private readonly http: Client) {}
-  getSections(signal?: AbortSignal) {
-    return this.http.call(sections, {}, { signal });
-  }
-  getUserPosts(
-    query: {
-      user_id?: string;
-      status: "draft" | "active";
-      p: number;
-      limit: number;
-    },
-    signal?: AbortSignal,
-  ) {
-    return this.http.call(posts, { query }, { signal });
-  }
-  deletePost(id: string) {
-    return this.http.withInvalidation(["community"], () =>
-      this.http.delete(`/post/${encodeURIComponent(id)}`),
-    );
-  }
-}
-export class CommunityService extends BaseService {
-  readonly common: CommonService;
+const updateMember = defineEndpoint<{
+  params: { id: string };
+  body: { name: string };
+  data: Member;
+}>({ method: "PATCH", path: "/members/:id" });
+
+// 应用持有并共享 client，service 只定义端点与失效规则。
+export class MemberService extends BaseService {
   constructor(client: Client) {
-    super("community", client);
-    this.common = new CommonService(client);
+    super("members", client);
   }
-}
-export class UserService extends BaseService {
-  constructor(client: Client) {
-    super("user", client);
+
+  list(page = 1, limit = 20, signal?: AbortSignal) {
+    return this.http.call(memberList, { query: { page, limit } }, { signal });
   }
-  getUserList() {
-    return this.http.call(members, {});
-  }
-  updateInfo(body: {
-    username: string;
-    contact1: string;
-    contact2: string;
-    intro: string;
-  }) {
+
+  rename(id: string, name: string) {
     return this.http.withInvalidation(["members"], () =>
-      this.http.patch("", body),
+      this.http.call(updateMember, { params: { id }, body: { name } }),
     );
   }
-}
-export function createAppServices(session: SessionOptions) {
-  const transport = createFetchTransport();
-  return {
-    community: new CommunityService(
-      createClient({
-        baseURL: "/api/community",
-        transport,
-        codec: sendsCodec,
-        session,
-      }),
-    ),
-    user: new UserService(
-      createClient({
-        baseURL: "/api/user",
-        transport,
-        codec: sendsCodec,
-        session,
-      }),
-    ),
-  };
 }

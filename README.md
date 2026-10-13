@@ -1,96 +1,51 @@
 # frontcache
 
+[![npm version](https://img.shields.io/npm/v/frontcache)](https://www.npmjs.com/package/frontcache)
+[![npm downloads](https://img.shields.io/npm/dm/frontcache)](https://www.npmjs.com/package/frontcache)
+[![license](https://img.shields.io/npm/l/frontcache)](./LICENSE)
+
 框架无关的 TypeScript 前端通信包，包含常见的会话请求与基础缓存管理。
 
-支持 Fetch、Axios、请求与响应类型约束、运行时校验，以及超时和取消。缓存以内存为主，按需开启，支持 TTL、并发合并与失效。
-
-适用于现代浏览器和 Node 20+，提供 ESM 与类型声明，支持 TypeScript 5.0+。
+支持 Fetch、Axios、强类型端点、Zod 或自定义运行时校验、超时与取消。缓存按需开启，使用实例内内存，支持 TTL、并发合并和按标签失效。
 
 ## 安装
-
-从 npm 安装：
 
 ```bash
 npm install frontcache
 ```
 
-## 基本请求
+## 快速使用
 
 ```ts
 import { createClient } from "frontcache";
 import { createFetchTransport } from "frontcache/fetch";
 
-interface Member {
-  id: string;
-  name: string;
-}
-
 const client = createClient({
-  baseURL: "/api",
+  baseURL: "/api", // Node 环境使用完整 URL
   transport: createFetchTransport(),
-  timeout: 15_000,
 });
 
-const member = await client.get<Member>("/members/1");
+const member = await client.get<{ id: string; name: string }>("/members/1");
 await client.patch("/members/1", { name: "新名称" });
 
-client.setToken("your-token"); // 默认使用 Bearer 认证
-await client.get("/public", { anonymous: true });
-client.clearToken();
+client.dispose(); // 应用或模块不再使用该实例时释放资源
 ```
 
-支持 GET、POST、PUT、PATCH、DELETE 等请求，默认返回 JSON 数据。未声明响应类型时返回 `unknown`。需要 Axios 时，将传输配置换成 `createAxiosTransport()`（从 `frontcache/axios` 导入）。
+需要 Axios 时，改用 `createAxiosTransport()`（从 `frontcache/axios` 导入）。泛型提供编译期约束；运行时校验与缓存通过 `defineEndpoint` 配置。
 
-```ts
-import { createAxiosTransport } from "frontcache/axios";
+## [相关文档](./USAGE.md)
 
-const axiosClient = createClient({
-  baseURL: "/api",
-  transport: createAxiosTransport(),
-});
+## 示例
+
+- [基本请求](./examples/basic.ts)
+- [类型校验与缓存](./examples/cache-schema.ts)
+- [会话与文件上传](./examples/auth-file.ts)
+- [Service 组合](./examples/services.ts)
+
+## npm 信息
+
+包名：[`frontcache`](https://www.npmjs.com/package/frontcache) · 许可证：[MIT](./LICENSE) · [源码](https://github.com/abcde1239/frontcache) · [问题反馈](https://github.com/abcde1239/frontcache/issues)
+
+```bash
+npm view frontcache version
 ```
-
-## 类型与缓存
-
-```ts
-import { defineEndpoint } from "frontcache";
-
-const memberDetail = defineEndpoint<{
-  params: { id: string };
-  data: Member;
-}>({
-  method: "GET",
-  path: "/members/:id",
-  cache: { ttl: 30_000, tags: ["members"] },
-});
-
-const detail = await client.call(memberDetail, { params: { id: "1" } });
-
-await client.withInvalidation(["members"], () =>
-  client.patch("/members/1", { name: "新名称" }),
-);
-client.invalidate({ tag: "members" });
-client.dispose(); // 使用结束时释放缓存与在途请求
-```
-
-端点可约束路径参数、query、body 和响应类型。缓存默认关闭，GET 端点显式开启后使用内存缓存，默认 TTL 为 30 秒、容量为 20；同键并发请求合并，失败结果不缓存。
-
-## 运行时校验
-
-运行时校验可使用zod，也可接入自定义 `parse` 校验器，校验结果自动推断类型：
-
-```ts
-import { z } from "zod";
-
-const endpoint = defineEndpoint({
-  method: "GET",
-  path: "/me",
-  validator: z.object({ id: z.string(), name: z.string() }),
-});
-
-const me = await client.call(endpoint, {});
-```
-
-异步校验使用 `validator: { parse: value => schema.parseAsync(value) }`。校验失败会拒绝请求，响应不会写入缓存。
-
-动态会话可通过 `session` 配置 token、刷新等待和 401 回调；认证查询使用缓存时需提供 `sessionVersion`，在身份变化时更新。业务响应可通过 `codec` 自定义。

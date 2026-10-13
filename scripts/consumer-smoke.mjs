@@ -6,6 +6,7 @@ import {
   readdirSync,
   writeFileSync,
   symlinkSync,
+  copyFileSync,
 } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
@@ -48,8 +49,24 @@ client.dispose()
   writeFileSync(
     join(directory, "consumer.ts"),
     `
-import { createClient, defineEndpoint, type ReadonlyData } from 'frontcache'
+import { createClient, defineEndpoint, type ReadonlyData, type ResponseType, type RequestOptions, type EndpointOptions, type TransportRequest, type ErrorKind, type ErrorInfo, type ErrorDetails } from 'frontcache'
 import { createFetchTransport } from 'frontcache/fetch'
+import type { CacheReadOptions, CacheInvalidationFilter } from 'frontcache/cache'
+const responseTypes: ResponseType[] = ['json', 'text', 'blob', 'arraybuffer']
+for (const responseType of responseTypes) {
+  const options: RequestOptions = { responseType }
+  const endpointOptions: EndpointOptions<{}> = { path: '/types', method: 'GET', responseType }
+  const request: Omit<TransportRequest, 'signal'> = { url: endpointOptions.path, method: endpointOptions.method, headers: {}, responseType: options.responseType ?? 'json' }
+  void request
+}
+const cacheOptions: CacheReadOptions = { ttl: 30 }
+const filter: CacheInvalidationFilter = { tag: 'items' }
+const errorKind: ErrorKind = 'network'
+const errorInfo: ErrorInfo = { kind: errorKind, message: 'offline', retryable: true }
+const errorDetails: ErrorDetails = { cause: new Error('offline') }
+// @ts-expect-error DOM response visibility is not a frontcache representation
+const invalidResponseType: ResponseType = 'opaque'
+void [cacheOptions, filter, invalidResponseType, errorInfo, errorDetails]
 interface Member { id: string }
 const endpoint = defineEndpoint<{ params: { id: string }; data: Member }>({ method: 'GET', path: '/members/:id' })
 const client = createClient({ transport: createFetchTransport() })
@@ -226,6 +243,54 @@ void [result, asyncResult, incorrect]
       path,
     ]);
   }
+  // 从 tarball 复制示例到真实消费工程，不借助仓库 paths 或源码验证公开入口。
+  const examples = readdirSync(join(install, "examples")).filter((name) =>
+    name.endsWith(".ts"),
+  );
+  assert.equal(examples.length, 4, "应包含四个使用示例");
+  mkdirSync(join(directory, "examples"));
+  for (const name of examples) {
+    const source = readFileSync(join(install, "examples", name), "utf8");
+    assert(
+      !/from\s+["'](?:@|\.\.?\/)/.test(source),
+      `示例不能依赖内部入口：${name}`,
+    );
+    copyFileSync(
+      join(install, "examples", name),
+      join(directory, "examples", name),
+    );
+  }
+  for (const mode of ["NodeNext", "Bundler"]) {
+    for (const compiler of compilers) {
+      const options = {
+        ...config,
+        files: examples
+          .filter(
+            (name) =>
+              compiler !== "typescript-min" || name !== "cache-schema.ts",
+          )
+          .map((name) => `examples/${name}`),
+        compilerOptions: {
+          ...config.compilerOptions,
+          module: mode === "Bundler" ? "ESNext" : "NodeNext",
+          moduleResolution: mode,
+        },
+      };
+      const path = join(
+        directory,
+        `tsconfig.examples.${compiler}.${mode}.json`,
+      );
+      writeFileSync(path, JSON.stringify(options));
+      run(process.execPath, [
+        resolve(root, `node_modules/${compiler}/bin/tsc`),
+        "-p",
+        path,
+      ]);
+    }
+  }
+  console.log(
+    "[consumer] all packaged examples passed without source aliases; Zod example uses current TS",
+  );
   const versions = compilers.map(
     (name) =>
       JSON.parse(

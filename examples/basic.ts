@@ -1,56 +1,37 @@
-import {
-  createClient,
-  createCodec,
-  defineEndpoint,
-  BusinessError,
-} from "../src/index.js";
-import { createFetchTransport } from "../src/adapters/fetch.js";
-import { createAxiosTransport } from "../src/adapters/axios.js";
-import axios from "axios";
+import { createClient } from "frontcache";
+import { createFetchTransport } from "frontcache/fetch";
+import { createAxiosTransport } from "frontcache/axios";
 
-interface User {
+export interface Member {
   id: string;
   name: string;
 }
-export const getUser = defineEndpoint<{ params: { id: string }; data: User }>({
-  method: "GET",
-  path: "/users/:id",
-  cache: { ttl: 30000, tags: ["users"] },
-});
-export function fetchClient(fetcher = fetch) {
+
+// 浏览器可传 /api；Node 使用完整地址。默认请求和响应都是普通 JSON。
+export function createHttpClient(baseURL: string) {
   return createClient({
-    baseURL: "/api",
-    transport: createFetchTransport({ fetcher }),
+    baseURL,
+    transport: createFetchTransport(),
+    timeout: 15_000,
   });
 }
-export function axiosClient() {
-  return createClient({
-    baseURL: "/api",
-    transport: createAxiosTransport({
-      instance: axios.create(),
-      cacheSafe: true,
-    }),
-  });
+
+// 选择 Axios 时只需替换 transport，无需自行创建 Axios 实例。
+export function createAxiosHttpClient(baseURL: string) {
+  return createClient({ baseURL, transport: createAxiosTransport() });
 }
-export const otherProtocol = createCodec<{ success: boolean; result: unknown }>(
-  {
-    parse(value) {
-      if (!value || typeof value !== "object" || !("success" in value))
-        throw new Error("invalid envelope");
-      return value as { success: boolean; result: unknown };
-    },
-    unwrap(envelope) {
-      if (!envelope.success) throw new BusinessError(envelope, "Rejected");
-      return envelope.result;
-    },
-  },
-);
-export async function updateUser() {
-  const client = fetchClient();
-  const user = await client.call(getUser, { params: { id: "1" } });
-  const edited = { ...user, name: "New name" };
-  await client.withInvalidation(["users"], () =>
-    client.patch("/users/1", edited),
-  );
-  client.dispose();
+
+export async function basicUsage(baseURL: string) {
+  const client = createHttpClient(baseURL);
+  try {
+    // 泛型声明响应类型；需要校验服务器数据时配置 endpoint.validator。
+    const member = await client.get<Member>("/members/1");
+    const updated = await client.patch<Member>("/members/1", {
+      name: "新名称",
+    });
+    const raw = await client.requestRaw<Member>({ url: "/members/1" });
+    return { member, updated, status: raw.status };
+  } finally {
+    client.dispose();
+  }
 }

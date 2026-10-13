@@ -1,40 +1,51 @@
-import type { Client } from "../src/index.js";
+import { createClient, type Client } from "frontcache";
+import { createFetchTransport } from "frontcache/fetch";
 
-/** 登录路径、刷新持久化、并发合并由应用负责，不在核心中固定。 */
-export class AppAuth<User> {
-  constructor(private readonly http: Client) {}
-  login(identifier: string, password: string) {
-    return this.http.post<
-      { token: string; user: User },
-      { identifier: string; password: string }
-    >("/token", { identifier, password }, { anonymous: true });
-  }
-  refresh(token: string) {
-    return this.http.post<{ new_token: string }>("/refresh", undefined, {
-      sessionToken: token,
-    });
-  }
+interface LoginResult {
+  token: string;
+  member: { id: string; name: string };
 }
-export class AppFiles<Authorization> {
-  constructor(
-    private readonly http: Client,
-    private readonly uploader: (
-      file: File,
-      authorization: Authorization,
-      signal?: AbortSignal,
-    ) => Promise<string>,
-  ) {}
-  async upload(
-    target: string,
-    file: File,
-    signal?: AbortSignal,
-  ): Promise<string> {
-    const authorization = await this.http.post<
-      Authorization,
-      { target: string }
-    >("/sts", { target }, { signal });
-    const url = await this.uploader(file, authorization, signal);
-    if (!url) throw new Error("Upload did not return a URL");
-    return url;
-  }
+
+// token 存储在应用状态；身份变更更新 version，同身份续期只更新 token。
+export function createSessionApp(baseURL: string) {
+  const session = { token: "", version: 0 };
+  const clearSession = () => {
+    session.token = "";
+    session.version++;
+    client.invalidate();
+  };
+  const client = createClient({
+    baseURL,
+    transport: createFetchTransport(),
+    session: {
+      token: () => session.token,
+      sessionVersion: () => session.version,
+      requireToken: true,
+      onUnauthorized: clearSession,
+      // 若需要刷新，可由宿主提供 ensureFreshToken，负责刷新并发合并与状态更新。
+    },
+  });
+  return {
+    client,
+    async login(identifier: string, password: string) {
+      const result = await client.post<LoginResult>(
+        "/auth/login",
+        { identifier, password },
+        { anonymous: true },
+      );
+      session.token = result.token;
+      session.version++;
+      client.invalidate();
+      return result.member;
+    },
+    logout: clearSession,
+    dispose: () => client.dispose(),
+  };
+}
+
+// 上传到应用自己的接口；浏览器自动生成 multipart boundary。
+export function uploadFile(client: Client, file: File, signal?: AbortSignal) {
+  const body = new FormData();
+  body.set("file", file);
+  return client.post<{ url: string }>("/files", body, { signal });
 }
