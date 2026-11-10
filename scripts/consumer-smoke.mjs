@@ -13,6 +13,7 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import assert from "node:assert/strict";
 import { root, run } from "./runtime.mjs";
+import { checkModules } from "./check-modules.mjs";
 
 export function consumers(tarball) {
   const directory = mkdtempSync(join(tmpdir(), "requestlane-consumer-"));
@@ -46,10 +47,39 @@ client.dispose()
 `,
   );
   run(process.execPath, [join(directory, "consumer.mjs")], { cwd: directory });
+  checkModules(join(install, "dist"));
+  writeFileSync(
+    join(directory, "modules.mjs"),
+    `
+import assert from 'node:assert/strict'
+import { createClient, defineEndpoint } from 'requestlane/core'
+import { ReadCache, createMemoryCache } from 'requestlane/cache'
+import { createSession } from 'requestlane/session'
+import { createFetchTransport } from 'requestlane/fetch'
+let calls = 0
+const transport = createFetchTransport({ fetcher: async () => { calls++; return new Response(JSON.stringify({ value: 7 })) } })
+for (const cache of [false, true]) for (const session of [false, true]) {
+  const client = createClient({ transport, cache: cache ? createMemoryCache() : undefined, session: session ? createSession() : undefined })
+  const endpoint = defineEndpoint({ method: 'GET', path: '/modules', cache, validator: { parse: async value => value.value } })
+  const before = calls
+  if (session) client.setToken('current')
+  assert.equal(await client.call(endpoint), 7)
+  assert.equal(await client.call(endpoint), 7)
+  assert.equal(calls - before, cache ? 1 : 2)
+  assert.equal(client.cache === undefined, !cache)
+  client.dispose()
+}
+const standalone = new ReadCache()
+assert.equal(await standalone.get('work', async () => 42), 42)
+standalone.clear()
+console.log('[consumer] four capability combinations and standalone cache passed without Axios/Zod installed')
+`,
+  );
+  run(process.execPath, [join(directory, "modules.mjs")], { cwd: directory });
   writeFileSync(
     join(directory, "consumer.ts"),
     `
-import { createClient, defineEndpoint, type ReadonlyData, type ResponseType, type RequestOptions, type EndpointOptions, type TransportRequest, type ErrorKind, type ErrorInfo, type ErrorDetails } from 'requestlane'
+import { createClient, defineEndpoint, type ReadonlyData, type ResponseType, type RequestOptions, type EndpointOptions, type TransportRequest, type ErrorKind, type ErrorInfo, type ErrorDetails, type Validator } from 'requestlane'
 import { createFetchTransport } from 'requestlane/fetch'
 import type { CacheReadOptions, CacheInvalidationFilter } from 'requestlane/cache'
 const responseTypes: ResponseType[] = ['json', 'text', 'blob', 'arraybuffer']
@@ -70,10 +100,34 @@ void [cacheOptions, filter, invalidResponseType, errorInfo, errorDetails]
 interface Member { id: string }
 const endpoint = defineEndpoint<{ params: { id: string }; data: Member }>({ method: 'GET', path: '/members/:id' })
 const client = createClient({ transport: createFetchTransport() })
+const customInput: Validator<number, string> = { parse: value => Number(value) }
+const parsedEndpoint = defineEndpoint({ method: 'POST', path: '/parsed', inputValidators: { body: customInput }, validator: { parse: () => true } })
+const parsedResult: Promise<boolean> = client.call(parsedEndpoint, { body: '18' })
+// @ts-expect-error callers provide raw input, not the parser output
+client.call(parsedEndpoint, { body: 18 })
+// @ts-expect-error required schema input cannot be omitted
+client.call(parsedEndpoint)
+const responseOnly = defineEndpoint({ method: 'GET', path: '/response-only', validator: { parse: () => 42 } })
+const responseOnlyResult: Promise<number> = client.call(responseOnly)
+void [parsedResult, responseOnlyResult]
 const result: Promise<ReadonlyData<Member>> = client.call(endpoint, { params: { id: '1' } })
 // @ts-expect-error wrong path type
 client.call(endpoint, { params: { id: 1 } })
 void result
+import { createClient as createCoreClient } from 'requestlane/core'
+import { createMemoryCache } from 'requestlane/cache'
+import { createSession } from 'requestlane/session'
+const core = createCoreClient({ transport: createFetchTransport() })
+const composed = createCoreClient({ transport: createFetchTransport(), cache: createMemoryCache(), session: createSession() })
+const coreResult: Promise<ReadonlyData<Member>> = core.call(endpoint, { params: { id: '1' } })
+composed.cache?.invalidate({ tag: 'items' })
+// @ts-expect-error core uses an explicit cache factory, not legacy full-client settings
+createCoreClient({ transport: createFetchTransport(), cache: { ttl: 100 } })
+// @ts-expect-error core uses an explicit session factory
+createCoreClient({ transport: createFetchTransport(), session: { token: () => 'x' } })
+// @ts-expect-error schema contract remains bound through the independent core entry
+core.call(parsedEndpoint, { body: 18 })
+void coreResult
 `,
   );
   const config = {
@@ -220,6 +274,23 @@ const asyncEndpoint = defineEndpoint({ method: 'GET', path: '/schema', validator
 const client = createClient({ transport: createFetchTransport() })
 const result: Promise<ReadonlyData<z.output<typeof schema>>> = client.call(endpoint, {})
 const asyncResult: Promise<ReadonlyData<z.output<typeof schema>>> = client.call(asyncEndpoint, {})
+const inferredInputs = defineEndpoint({
+  method: 'PATCH', path: '/members/:id',
+  inputValidators: {
+    params: z.object({ id: z.string() }),
+    body: z.object({ age: z.string().transform(Number) }),
+    query: z.object({ page: z.number() }).default({ page: 1 }),
+  },
+  validator: z.object({ age: z.number() }),
+})
+const inferredInputsResult: Promise<ReadonlyData<{ age: number }>> = client.call(inferredInputs, { params: { id: '1' }, body: { age: '18' } })
+// @ts-expect-error schema input is a string even when its output is a number
+client.call(inferredInputs, { params: { id: '1' }, body: { age: 18 } })
+// @ts-expect-error required path parameters cannot be omitted
+client.call(inferredInputs, { body: { age: '18' } })
+const defaults = defineEndpoint({ method: 'GET', path: '/defaults', inputValidators: { query: z.object({ page: z.number() }).default({ page: 1 }) } })
+client.call(defaults)
+void inferredInputsResult
 // @ts-expect-error runtime transform changes output to a number
 const incorrect: Promise<{ value: string }> = client.call(endpoint, {})
 void [result, asyncResult, incorrect]

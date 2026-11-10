@@ -12,7 +12,6 @@ import {
 import { checkTimeout, raceSignal, requestLifetime } from "@/request/lifecycle";
 import { prepareRequest } from "@/core/prepare-request";
 import { loadResponse } from "@/core/load-response";
-import { readRequest } from "@/core/cached-request";
 
 export type ResponseMode = "raw" | "envelope" | "data";
 
@@ -80,14 +79,24 @@ export class RequestExecutor {
     context.assertCurrent();
     const load = (transportSignal: AbortSignal) =>
       loadResponse(this.state, context, mode, codec, endpoint, transportSignal);
-    const result = await readRequest(
-      this.state,
-      context,
-      mode,
-      endpoint,
-      signal,
-      load,
-    );
+    let result: unknown;
+    if (this.state.cache)
+      result = await this.state.cache.read(
+        context,
+        mode,
+        endpoint,
+        signal,
+        load,
+      );
+    else {
+      if (
+        mode === "data" &&
+        endpoint?.options.cache &&
+        !context.prepared.bypassCache
+      )
+        throw new TypeError("Cache capability is not configured");
+      result = await load(signal);
+    }
     context.assertSession();
     return result;
   }

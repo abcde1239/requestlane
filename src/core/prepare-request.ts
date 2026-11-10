@@ -2,9 +2,9 @@ import type { ClientState } from "@/core/client-state";
 
 import { mergeHeaders, requestBody, requestURL } from "@/utils/serialization";
 import { validate } from "@/response/codec";
-import { cancelled, CommunicationError } from "@/response/errors";
+import { cancelled } from "@/response/errors";
 import { raceSignal } from "@/request/lifecycle";
-import type { Scope } from "@/types/common";
+import type { SessionContext } from "@/core/capabilities";
 import type { Endpoint, EndpointSpec } from "@/types/endpoint";
 import type { RequestConfig } from "@/types/request";
 import type { TransportRequest } from "@/types/transport";
@@ -13,13 +13,13 @@ export interface PreparedRequest {
   prepared: RequestConfig;
   request: Omit<TransportRequest, "signal">;
   anonymous: boolean;
-  token: string;
-  selectedToken: string;
+  identity?: SessionContext;
+  authHeader: string;
   explicitAuth: boolean | undefined;
   generation: number;
-  initialVersion: Scope | undefined;
   assertCurrent(): void;
   assertSession(): void;
+  assertShared(): void;
 }
 
 /** 校验输入并取得凭证；本阶段使用消费者的 signal。 */
@@ -30,21 +30,15 @@ export async function prepareRequest(
   signal: AbortSignal,
 ): Promise<PreparedRequest> {
   signal.throwIfAborted();
-  const session = state.options.session;
-  const initialVersion = session?.sessionVersion?.();
-  if (initialVersion !== state.observedScope) {
-    state.cache.clear();
-    state.observedScope = initialVersion;
-  }
+  const snapshot = state.session?.begin();
   const generation = state.generation;
+  const assertShared = () => {
+    if (state.disposed || generation !== state.generation) throw cancelled();
+    snapshot?.assertCurrent();
+  };
   const assertCurrent = () => {
     signal.throwIfAborted();
-    if (
-      state.disposed ||
-      generation !== state.generation ||
-      (session?.sessionVersion && initialVersion !== session.sessionVersion())
-    )
-      throw cancelled();
+    assertShared();
   };
   const validators = endpoint?.options.inputValidators;
   const body = await raceSignal(
@@ -73,30 +67,9 @@ export async function prepareRequest(
     );
   assertCurrent();
   const anonymous = prepared.anonymous ?? false;
-  let token = anonymous
-    ? ""
-    : prepared.sessionToken !== undefined
-      ? prepared.sessionToken
-      : session?.token
-        ? session.token()
-        : state.manualToken;
-  if (
-    !anonymous &&
-    prepared.sessionToken === undefined &&
-    session?.ensureFreshToken
-  ) {
-    token = await raceSignal(session.ensureFreshToken(), signal);
-    assertCurrent();
-    if (
-      session.token &&
-      state.formatToken(token) !== state.formatToken(session.token())
-    )
-      throw cancelled();
-  }
-  if (!anonymous && session?.requireToken && !token)
-    throw new CommunicationError("Authentication required", "http", {
-      status: 401,
-    });
+  const authHeader = (
+    state.options.auth?.header ?? "authorization"
+  ).toLowerCase();
   const headers = mergeHeaders(state.options.headers, prepared.headers);
   headers.accept ??=
     (prepared.responseType ?? "json") === "json" ? "application/json" : "*/*";
@@ -105,26 +78,23 @@ export async function prepareRequest(
     Object.keys(prepared.headers).some(
       (key) =>
         key.toLowerCase() === "authorization" ||
-        key.toLowerCase() === state.authHeader,
+        key.toLowerCase() === authHeader,
     );
-  if (anonymous || session) {
+  // 匿名隐私保护是请求基础语义，不依赖会话模块。
+  if (anonymous) {
     delete headers.authorization;
-    delete headers[state.authHeader];
-    if (token) headers[state.authHeader] = state.formatToken(token);
-  } else if (!headers[state.authHeader] && token)
-    headers[state.authHeader] = state.formatToken(token);
-  const selectedToken = state.formatToken(token);
+    delete headers[authHeader];
+  }
+  if (!state.session && prepared.sessionToken !== undefined && !anonymous)
+    throw new TypeError("Session capability is not configured");
+  const identity =
+    state.session && snapshot
+      ? await state.session.authorize(prepared, headers, snapshot, signal)
+      : undefined;
+  assertCurrent();
   const assertSession = () => {
     assertCurrent();
-    // provider 未给代次时仍阻止旧凭证响应；有代次时允许同身份续期。
-    if (
-      !anonymous &&
-      session?.token &&
-      !session.sessionVersion &&
-      prepared.sessionToken === undefined &&
-      selectedToken !== state.formatToken(session.token())
-    )
-      throw cancelled();
+    identity?.assertConsumer();
   };
   const method = prepared.method ?? "GET";
   if ((method === "GET" || method === "HEAD") && prepared.body !== undefined)
@@ -149,12 +119,12 @@ export async function prepareRequest(
     prepared,
     request,
     anonymous,
-    token,
-    selectedToken,
+    identity,
+    authHeader,
     explicitAuth,
     generation,
-    initialVersion,
     assertCurrent,
     assertSession,
+    assertShared,
   };
 }

@@ -30,7 +30,9 @@ export async function validate<T>(
 ): Promise<unknown> {
   if (!validator) return value;
   try {
-    return await validator.parse(value);
+    return await (validator.parseAsync
+      ? validator.parseAsync(value)
+      : validator.parse(value));
   } catch (error) {
     throw new ValidationError(error);
   }

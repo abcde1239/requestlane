@@ -55,6 +55,14 @@
     "./response/sends": {
       "types": "./dist/response/sends.d.ts",
       "import": "./dist/response/sends.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./session": {
+      "types": "./dist/session/index.d.ts",
+      "import": "./dist/session/index.js"
     }
   },
   "engines": {

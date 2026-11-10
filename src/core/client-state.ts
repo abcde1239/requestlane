@@ -1,66 +1,32 @@
-import type { ClientOptions } from "@/core/client-options";
-import { ReadCache } from "@/cache/index";
-import { mergeHeaders } from "@/utils/serialization";
-import { bearerToken, checkTimeout } from "@/request/lifecycle";
+import type {
+  CoreClientOptions,
+  RequestClientOptions,
+} from "@/core/client-options";
+import type { CacheBinding, SessionBinding } from "@/core/capabilities";
+import { checkTimeout } from "@/request/lifecycle";
 import { cancelled } from "@/response/errors";
-
-/** 实例状态仅由执行管线使用；不作为包的公开接口导出。 */
+/** 核心只拥有调用生命周期；可选能力按实例创建。 */
 export class ClientState {
-  readonly cache: ReadCache;
-  readonly options: ClientOptions;
-  manualToken = "";
+  readonly cache?: CacheBinding;
+  readonly session?: SessionBinding;
+  readonly options: RequestClientOptions;
   generation = 0;
   disposed = false;
   lifetimes = new Set<AbortController>();
-  observedScope: string | number | undefined;
-
-  constructor(options: ClientOptions) {
+  constructor(options: CoreClientOptions) {
     checkTimeout(options.timeout ?? 15000);
-    this.options = {
-      ...options,
-      headers: { ...options.headers },
-      session: options.session ? { ...options.session } : undefined,
-    };
-    this.cache = new ReadCache(
-      options.cache?.ttl ?? 30000,
-      options.cache?.capacity ?? 20,
-    );
-    this.observedScope = options.session?.sessionVersion?.();
+    const { cache, session, ...requestOptions } = options;
+    this.options = { ...requestOptions, headers: { ...options.headers } };
+    this.cache = cache?.(this);
+    this.session = session?.(this);
   }
-
-  setToken(token: string): void {
-    const old = this.formatToken(this.manualToken);
-    const normalized = this.formatToken(token);
-    this.manualToken = token;
-    if (!this.options.session?.token) {
-      const headers = mergeHeaders(this.options.headers);
-      const hadDefault =
-        headers[this.authHeader] !== undefined ||
-        headers.authorization !== undefined;
-      delete headers[this.authHeader];
-      delete headers.authorization;
-      this.options.headers = headers;
-      if (normalized !== old || hadDefault) {
-        this.generation++;
-        this.cache.clear();
-      }
-    }
+  identityChanged(): void {
+    this.generation++;
+    this.cache?.store.clear();
   }
-
-  get authHeader(): string {
-    return (this.options.auth?.header ?? "authorization").toLowerCase();
-  }
-
-  formatToken(token: string): string {
-    return token.trim()
-      ? (this.options.auth?.format ?? bearerToken)(token)
-      : "";
-  }
-
   dispose(): void {
     this.disposed = true;
-    this.generation++;
-    this.cache.clear();
+    this.identityChanged();
     for (const controller of this.lifetimes) controller.abort(cancelled());
     this.lifetimes.clear();
   }

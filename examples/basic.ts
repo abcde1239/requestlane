@@ -1,6 +1,9 @@
 import { createClient } from "requestlane";
 import { createFetchTransport } from "requestlane/fetch";
 import { createAxiosTransport } from "requestlane/axios";
+import { createClient as createCoreClient } from "requestlane/core";
+import { ReadCache, createMemoryCache } from "requestlane/cache";
+import { createSession } from "requestlane/session";
 
 export interface Member {
   id: string;
@@ -19,6 +22,31 @@ export function createHttpClient(baseURL: string) {
 // 选择 Axios 时只需替换 transport，无需自行创建 Axios 实例。
 export function createAxiosHttpClient(baseURL: string) {
   return createClient({ baseURL, transport: createAxiosTransport() });
+}
+
+// 最小入口不初始化缓存或会话。传输仍由调用方显式选择。
+export function createMinimalHttpClient(baseURL: string) {
+  return createCoreClient({ baseURL, transport: createFetchTransport() });
+}
+
+// 两种能力可分别省略；每个客户端拥有独立缓存和手动凭证。
+export function createComposedHttpClient(baseURL: string) {
+  return createCoreClient({
+    baseURL,
+    transport: createAxiosTransport(),
+    cache: createMemoryCache({ ttl: 30_000, capacity: 20 }),
+    session: createSession(),
+  });
+}
+
+// ReadCache 与 HTTP 无关，也能缓存计算、SDK 调用等异步结果。
+export async function cacheCalculation() {
+  const cache = new ReadCache();
+  try {
+    return await cache.get("answer", async () => 42);
+  } finally {
+    cache.clear();
+  }
 }
 
 export async function basicUsage(baseURL: string) {

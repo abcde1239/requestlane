@@ -1,6 +1,9 @@
 import { createClient, defineEndpoint } from "@";
 import { createFetchTransport } from "@/adapters/fetch";
 import { createAxiosTransport } from "@/adapters/axios";
+import { createClient as createCoreClient } from "requestlane/core";
+import { createMemoryCache } from "requestlane/cache";
+import { createSession } from "requestlane/session";
 
 async function browserContracts() {
   let assertions = 0;
@@ -60,6 +63,32 @@ async function browserContracts() {
     }
     check(rejected, `${kind} HTTP error`);
     client.dispose();
+    for (const cache of [false, true])
+      for (const session of [false, true]) {
+        const composed = createCoreClient({
+          baseURL: location.origin,
+          transport,
+          cache: cache ? createMemoryCache() : undefined,
+          session: session ? createSession() : undefined,
+        });
+        if (session) composed.setToken("browser");
+        const contract = defineEndpoint<{ data: { count: number } }>({
+          method: "GET",
+          path: `/data/${kind}-${cache}-${session}`,
+          cache,
+        });
+        await composed.call(contract);
+        const again = await composed.call(contract);
+        check(
+          again.count === (cache ? 1 : 2),
+          `${kind} modules cache=${cache} session=${session}`,
+        );
+        check(
+          (composed.cache !== undefined) === cache,
+          `${kind} optional cache allocation`,
+        );
+        composed.dispose();
+      }
   }
   return assertions;
 }

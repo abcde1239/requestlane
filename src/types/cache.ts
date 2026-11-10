@@ -26,3 +26,17 @@ export interface CacheInvalidationFilter {
   tag?: string;
   prefix?: string;
 }
+
+/** 请求集成依赖的结构化缓存接口，不引用具体内存实现。 */
+export interface CacheStore {
+  readonly size: number;
+  readonly pending: number;
+  clear(): void;
+  invalidate(filter?: CacheInvalidationFilter): void;
+  get<T>(
+    key: string,
+    load: (signal: AbortSignal) => Promise<T>,
+    signal?: AbortSignal,
+    options?: CacheReadOptions,
+  ): Promise<T>;
+}

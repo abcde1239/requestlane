@@ -14,6 +14,8 @@
       "@": ["./src/index.ts"],
       "@/*": ["./src/*"],
       "requestlane": ["./src/index.ts"],
+      "requestlane/core": ["./src/core/index.ts"],
+      "requestlane/session": ["./src/session/index.ts"],
       "requestlane/fetch": ["./src/adapters/fetch.ts"],
       "requestlane/axios": ["./src/adapters/axios.ts"],
       "requestlane/cache": ["./src/cache/index.ts"],

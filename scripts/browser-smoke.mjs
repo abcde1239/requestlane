@@ -110,7 +110,17 @@ export async function browserSmoke() {
       throw new Error(
         `Browser smoke failed (${status}): ${output || diagnostic}`,
       );
-    console.log("[browser] real Chromium Axios/Fetch: 16 assertions passed");
+    const body = output.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1];
+    const report = JSON.parse(body ?? "{}");
+    if (
+      report.passed !== true ||
+      !Number.isInteger(report.assertions) ||
+      report.assertions < 32
+    )
+      throw new Error(`Incomplete browser contracts: ${body}`);
+    console.log(
+      `[browser] real Chromium Axios/Fetch: ${report.assertions} assertions passed`,
+    );
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

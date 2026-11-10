@@ -8,7 +8,6 @@ import {
   CommunicationError,
   HttpError,
   InvalidResponseError,
-  cancelled,
   normalizeError,
 } from "@/response/errors";
 import { raceSignal } from "@/request/lifecycle";
@@ -25,9 +24,7 @@ export async function loadResponse(
   endpoint: Endpoint<EndpointSpec> | undefined,
   transportSignal: AbortSignal,
 ): Promise<unknown> {
-  const { request, generation, initialVersion, anonymous, selectedToken } =
-    context;
-  const session = state.options.session;
+  const { request, identity } = context;
   let response: TransportResponse;
   try {
     response = await raceSignal(
@@ -38,30 +35,12 @@ export async function loadResponse(
     throw normalizeError(error);
   }
   transportSignal.throwIfAborted();
-  // 共享请求不能引用首个消费者的 signal；只检查共享状态与身份。
-  if (
-    state.disposed ||
-    generation !== state.generation ||
-    (session?.sessionVersion && initialVersion !== session.sessionVersion()) ||
-    (!anonymous &&
-      session?.token &&
-      !session.sessionVersion &&
-      selectedToken !== state.formatToken(session.token()))
-  )
-    throw cancelled();
+  context.assertShared();
+  identity?.assertResponse();
   if (response.status < 200 || response.status >= 300) {
-    if (
-      response.status === 401 &&
-      session?.onUnauthorized &&
-      !anonymous &&
-      selectedToken &&
-      (!session.token || state.formatToken(session.token()) === selectedToken)
-    ) {
+    if (response.status === 401 && identity) {
       try {
-        await raceSignal(
-          Promise.resolve(session.onUnauthorized()),
-          transportSignal,
-        );
+        await identity.unauthorized(transportSignal);
       } catch {
         /* preserve HTTP failure */
       }
@@ -92,11 +71,6 @@ export async function loadResponse(
     transportSignal,
   );
   transportSignal.throwIfAborted();
-  if (
-    state.disposed ||
-    generation !== state.generation ||
-    (session?.sessionVersion && initialVersion !== session.sessionVersion())
-  )
-    throw cancelled();
+  context.assertShared();
   return data;
 }

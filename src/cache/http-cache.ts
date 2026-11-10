@@ -1,4 +1,5 @@
-import type { ClientState } from "@/core/client-state";
+import type { CapabilityHost, CacheFactory } from "@/core/capabilities";
+import { ReadCache } from "@/cache/read-cache";
 import type { PreparedRequest } from "@/core/prepare-request";
 import type { ResponseMode } from "@/core/request-executor";
 import { checkTTL } from "@/utils/checkTTL";
@@ -7,8 +8,10 @@ import type { CachePolicy } from "@/types/cache";
 import type { Endpoint, EndpointSpec } from "@/types/endpoint";
 
 /** 缓存准入、身份隔离的 key 与共享传输预算。 */
-export async function readRequest(
-  state: ClientState,
+async function readRequest(
+  state: CapabilityHost,
+  store: ReadCache,
+  options: MemoryCacheOptions,
   context: PreparedRequest,
   mode: ResponseMode,
   endpoint: Endpoint<EndpointSpec> | undefined,
@@ -19,28 +22,23 @@ export async function readRequest(
     prepared,
     request,
     anonymous,
-    token,
+    identity,
+    authHeader,
     explicitAuth,
     generation,
-    initialVersion,
   } = context;
   const { method, url, headers } = request;
-  const session = state.options.session;
   const policy = endpoint?.options.cache;
   let result: unknown;
   if (policy && !prepared.bypassCache && mode === "data") {
     if (method !== "GET")
       throw new TypeError("Only GET endpoints support caching");
-    if (
-      (session?.token || session?.ensureFreshToken) &&
-      !session.sessionVersion &&
-      !anonymous
-    )
+    if (identity?.requiresCacheScope)
       throw new TypeError(
         "Cached authenticated endpoints require sessionVersion",
       );
     const settings: CachePolicy = policy === true ? {} : policy;
-    checkTTL(settings.ttl ?? state.options.cache?.ttl ?? 30000);
+    checkTTL(settings.ttl ?? options.ttl ?? 30000);
     checkTimeout(
       settings.transportTimeout ??
         endpoint?.options.timeout ??
@@ -52,11 +50,13 @@ export async function readRequest(
       !explicitAuth &&
       !headers.cookie &&
       prepared.sessionToken === undefined &&
-      (!headers[state.authHeader] || !!token);
+      (!headers.authorization ||
+        (authHeader === "authorization" && !!identity?.token)) &&
+      (!headers[authHeader] || !!identity?.token);
     if (safe) {
       const publicHeaders = { ...headers };
       delete publicHeaders.authorization;
-      delete publicHeaders[state.authHeader];
+      delete publicHeaders[authHeader];
       delete publicHeaders.cookie;
       const alias =
         settings.key?.({
@@ -65,7 +65,7 @@ export async function readRequest(
           params: prepared.params,
         }) ?? url;
       const key = `${endpoint!.identity}|${JSON.stringify([
-        anonymous ? "anonymous" : (initialVersion ?? generation),
+        anonymous ? "anonymous" : (identity?.initialVersion ?? generation),
         alias,
         url,
         Object.entries(publicHeaders).sort(),
@@ -77,7 +77,7 @@ export async function readRequest(
           state.options.timeout ??
           15000,
       ])}`;
-      result = await state.cache.get(
+      result = await store.get(
         key,
         async (sharedSignal) => {
           const shared = requestLifetime(
@@ -99,4 +99,32 @@ export async function readRequest(
     } else result = await load(signal);
   } else result = await load(signal);
   return result;
+}
+
+export interface MemoryCacheOptions {
+  capacity?: number;
+  ttl?: number;
+}
+/** 请求缓存集成；每次组合创建独立存储，不共享客户端身份。 */
+export function createMemoryCache(
+  options: MemoryCacheOptions = {},
+): CacheFactory {
+  const settings = { ...options };
+  return (host) => {
+    const store = new ReadCache(settings.ttl ?? 30000, settings.capacity ?? 20);
+    return {
+      store,
+      read: (context, mode, endpoint, signal, load) =>
+        readRequest(
+          host,
+          store,
+          settings,
+          context,
+          mode,
+          endpoint,
+          signal,
+          load,
+        ),
+    };
+  };
 }
