@@ -15,7 +15,6 @@ export default defineConfig({
     nav: [
       { text: "快速开始", link: "/guides/usage" },
       { text: "API", link: "/reference/client" },
-      { text: "示例", link: "/examples/" },
     ],
     sidebar: [
       {
@@ -30,7 +29,7 @@ export default defineConfig({
       {
         text: "API 参考",
         items: [
-          { text: "Client（Core）", link: "/reference/client" },
+          { text: "Client", link: "/reference/client" },
           { text: "Cache", link: "/reference/cache" },
           { text: "Session", link: "/reference/session" },
           { text: "Response", link: "/reference/response" },
@@ -38,7 +37,6 @@ export default defineConfig({
           { text: "包入口与运行环境", link: "/reference/exports" },
         ],
       },
-      { text: "示例", items: [{ text: "代码示例", link: "/examples/" }] },
     ],
     socialLinks: [
       { icon: "github", link: "https://github.com/abcde1239/requestlane" },

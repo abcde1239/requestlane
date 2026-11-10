@@ -1,14 +1,30 @@
 # 快速开始
 
-[文档首页](../index.md) · [包入口](../reference/exports.md) · [使用示例](../examples/index.md)
+[文档首页](../index.md) · [包入口](../reference/exports.md)
 
 本页以完整客户端为例，从发送请求开始，逐步介绍响应校验、缓存和会话管理。已有 Axios、查询或认证工具时，可参考[与已有工具配合](./integrations.md)，选择适合的接入方式。
 
 ## 安装
 
-```bash
+::: code-group
+
+```sh [npm]
 npm install requestlane
 ```
+
+```sh [pnpm]
+pnpm add requestlane
+```
+
+```sh [yarn]
+yarn add requestlane
+```
+
+```sh [bun]
+bun add requestlane
+```
+
+:::
 
 Axios、Zod 随包自动安装。包采用 ESM，适用于现代浏览器、Node.js 20+ 和 Bun 1.3.4+。完整环境说明见[运行环境](../reference/exports.md#运行环境)。
 

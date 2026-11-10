@@ -6,13 +6,13 @@
 
 ## 模块 API
 
-| 模块                                    | API 内容                                               |
-| --------------------------------------- | ------------------------------------------------------ |
-| [Client（Core）](./reference/client.md) | 工厂、配置字段、请求方法、端点、传输及生命周期接口     |
-| [Cache](./reference/cache.md)           | ReadCache、缓存工厂、读取参数、策略、失效接口与默认值  |
-| [Session](./reference/session.md)       | 会话工厂、SessionOptions、凭证方法、认证配置与回调行为 |
-| [Response](./reference/response.md)     | 响应类型、codec、Validator、协议助手与错误类型         |
-| [Service](./reference/service.md)       | BaseService 的构造参数、实例属性与可见性               |
+| 模块                                | API 内容                                               |
+| ----------------------------------- | ------------------------------------------------------ |
+| [Client](./reference/client.md)     | 工厂、配置字段、请求方法、端点、传输及生命周期接口     |
+| [Cache](./reference/cache.md)       | ReadCache、缓存工厂、读取参数、策略、失效接口与默认值  |
+| [Session](./reference/session.md)   | 会话工厂、SessionOptions、凭证方法、认证配置与回调行为 |
+| [Response](./reference/response.md) | 响应类型、codec、Validator、协议助手与错误类型         |
+| [Service](./reference/service.md)   | BaseService 的构造参数、实例属性与可见性               |
 
 Client 的[端点类型与校验](./guides/validation.md)单独展开 Zod、输入转换、默认值和异步校验。需要将缓存与会话组合到 core 时，见[模块组合](./guides/modules.md)。
 
@@ -20,6 +20,5 @@ Client 的[端点类型与校验](./guides/validation.md)单独展开 Zod、输�
 
 - [与已有工具配合](./guides/integrations.md)：复用 Axios、查询缓存、认证及框架能力。
 - [包入口参考](./reference/exports.md)：导出、运行环境与版本说明。
-- [使用示例](./examples/index.md)：可复制的完整代码。
 
 [npm](https://www.npmjs.com/package/requestlane) · [返回 README](https://github.com/abcde1239/requestlane/blob/master/README.md)

@@ -16,9 +16,13 @@ for (const file of [
   "reference/session.html",
   "reference/response.html",
   "reference/service.html",
-  "examples/index.html",
 ])
   assert(existsSync(resolve(output, file)), `缺少文档站页面：${file}`);
+
+assert(
+  !existsSync(resolve(output, "examples")),
+  "文档站不应生成 examples 页面",
+);
 
 function inspect(directory) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
@@ -31,6 +35,11 @@ function inspect(directory) {
       `文档站产物包含内部目录：${file}`,
     );
     if (entry.isDirectory()) inspect(file);
+    else if (entry.name.endsWith(".html"))
+      assert(
+        !readFileSync(file, "utf8").includes("/requestlane/examples"),
+        `文档站页面不应包含 examples 导航：${file}`,
+      );
   }
 }
 inspect(output);
@@ -40,6 +49,14 @@ assert(
   "Pages 资源必须使用仓库 base 路径",
 );
 assert(home.includes("/requestlane/reference/client"), "首页缺少 API 入口");
+for (const page of ["guides/usage.html", "reference/exports.html"]) {
+  const html = readFileSync(resolve(output, page), "utf8");
+  for (const manager of ["npm", "pnpm", "yarn", "bun"])
+    assert(
+      html.includes(`data-title="${manager}"`),
+      `${page} 缺少 ${manager} 安装选项卡`,
+    );
+}
 console.log(
   "[docs-site] VitePress pages / base / public output boundary passed",
 );

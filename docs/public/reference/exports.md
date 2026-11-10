@@ -4,9 +4,25 @@
 
 ## 安装与导入
 
-```bash
+::: code-group
+
+```sh [npm]
 npm install requestlane
 ```
+
+```sh [pnpm]
+pnpm add requestlane
+```
+
+```sh [yarn]
+yarn add requestlane
+```
+
+```sh [bun]
+bun add requestlane
+```
+
+:::
 
 所有导入路径都属于同一个 npm 包，使用标准 ESM 导入，例如 `import { createClient } from "requestlane"`。以下入口适用于 0.1.4 及以上版本。
 

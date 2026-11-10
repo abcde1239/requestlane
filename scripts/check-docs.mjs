@@ -35,7 +35,6 @@ for (const required of [
   "docs/public/index.md",
   "docs/public/guides/usage.md",
   "docs/public/reference/exports.md",
-  "docs/public/examples/index.md",
   "docs/public/reference/client.md",
   "docs/public/reference/cache.md",
   "docs/public/reference/session.md",

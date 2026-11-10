@@ -16,6 +16,6 @@
 | [Response](./docs/public/reference/response.md) | 响应类型、codec、协议助手与错误类型                                                              |
 | [Service](./docs/public/reference/service.md)   | BaseService 构造参数与实例属性                                                                   |
 
-其他资料：[模块组合](./docs/public/guides/modules.md) · [与已有工具配合](./docs/public/guides/integrations.md) · [包入口参考](./docs/public/reference/exports.md) · [使用示例](./docs/public/examples/index.md)。
+其他资料：[模块组合](./docs/public/guides/modules.md) · [与已有工具配合](./docs/public/guides/integrations.md) · [包入口参考](./docs/public/reference/exports.md)。
 
 [返回 README](./README.md)
