@@ -10,6 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { root, run } from "./runtime.mjs";
+import { isInternalPath } from "./commit-policy.mjs";
 
 // 使用真实 index 快照：未暂存的修复不能使待提交的错误代码通过检查。
 const { spawnSync } = await import("node:child_process");
@@ -21,9 +22,7 @@ const listing = spawnSync(
 if (listing.error) throw listing.error;
 if (listing.status !== 0) throw new Error("无法读取暂存区");
 const staged = listing.stdout.split("\0").filter(Boolean);
-const excluded = staged.filter((path) =>
-  /(^|\/)(docs|verification|verficaction|\.agent)(\/|$)/i.test(path),
-);
+const excluded = staged.filter(isInternalPath);
 assert.equal(
   excluded.length,
   0,
@@ -85,6 +84,15 @@ try {
   );
   run(process.execPath, ["scripts/test-coverage.mjs"], { cwd: snapshot });
   run(process.execPath, ["scripts/build.mjs"], { cwd: snapshot });
+  const metadata = JSON.parse(
+    readFileSync(join(snapshot, "package.json"), "utf8"),
+  );
+  if (metadata.files.includes("docs/public")) {
+    run(process.execPath, ["scripts/check-docs.mjs"], { cwd: snapshot });
+    run(process.execPath, ["scripts/check-doc-examples.mjs"], {
+      cwd: snapshot,
+    });
+  }
   console.log("[pre-commit] 暂存区检查通过");
 } finally {
   // 先移除依赖链接；递归清理只允许本脚本创建的系统临时目录。

@@ -63,7 +63,7 @@ export async function releasePlan(candidate, fetchRegistry = fetch) {
   );
   if (response.status === 404)
     throw new Error(
-      "requestlane 尚未发布，请先手动首次发布并配置 npm Trusted Publisher（见 CONTRIBUTING.md）",
+      "requestlane 尚未发布，请由包维护者手动首次发布并配置 npm Trusted Publisher：https://docs.npmjs.com/trusted-publishers/",
     );
   if (!response.ok)
     throw new Error(`npm registry 查询失败：HTTP ${response.status}`);

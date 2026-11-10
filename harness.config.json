@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "repository": {
+    "visibility": "public"
+  },
+  "workspaces": [
+    {
+      "id": "root",
+      "root": "."
+    }
+  ],
+  "documents": {
+    "defaultAudience": "internal",
+    "publicRoots": [
+      "docs/public",
+      "src",
+      "test",
+      "scripts",
+      "examples",
+      ".github"
+    ],
+    "internalRoots": [
+      "docs/development",
+      "docs/prd",
+      "docs/decision",
+      "docs/verification",
+      "docs/memory",
+      ".harness",
+      ".cache",
+      ".agent",
+      ".agents",
+      ".codex",
+      "verification",
+      "verficaction"
+    ],
+    "publicPatterns": [
+      "README.md",
+      "USAGE.md",
+      "LICENSE",
+      "package.json",
+      "bun.lock",
+      "index.ts",
+      "tsconfig.json",
+      "tsconfig.build.json",
+      ".gitattributes",
+      ".gitignore",
+      ".prettierignore",
+      ".prettierrc.json",
+      ".husky/pre-commit",
+      "harness.config.json"
+    ],
+    "internalPatterns": [
+      "CONTRIBUTING.md",
+      "docs/structure.md",
+      "docs/agent_guide.md",
+      "**/MEMORY.md",
+      "**/memory/**",
+      "**/memories/**",
+      "**/decision/**",
+      "**/decisions/**"
+    ]
+  },
+  "tests": {
+    "include": ["test/**/*.test.ts"],
+    "exclude": [".cache/**", ".husky/**", ".harness/**", "node_modules/**"],
+    "artifacts": ["artifacts", "coverage", "dist", "out"],
+    "requireConfiguredTask": true
+  },
+  "tasks": [
+    {
+      "id": "root:verify",
+      "workspace": "root",
+      "kind": "test",
+      "argv": ["node", "scripts/verify.mjs"],
+      "timeoutMs": 1200000,
+      "covers": ["root"],
+      "cwd": ".",
+      "dependsOn": [],
+      "required": true,
+      "enabled": true
+    }
+  ],
+  "publicationTargets": [],
+  "rules": {},
+  "baseline": []
+}

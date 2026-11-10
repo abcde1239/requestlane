@@ -70,6 +70,7 @@ export function installSmoke(tarball) {
         "dist",
         "README.md",
         "USAGE.md",
+        "docs",
         "examples",
         "LICENSE",
         "package.json",
@@ -77,6 +78,15 @@ export function installSmoke(tarball) {
       `产物含非公开文件：${name}`,
     );
   if (tarball.endsWith(".tgz")) {
+    assert.deepEqual(
+      readdirSync(join(installed, "docs")),
+      ["public"],
+      "npm 包只能包含 docs/public，不得包含开发资料",
+    );
+    assert(
+      existsSync(join(installed, "docs/public/guides/usage.md")),
+      "完整使用指南必须随包分发",
+    );
     assert(existsSync(join(installed, "USAGE.md")), "使用文档必须随包分发");
     assert(
       readFileSync(join(installed, "README.md"), "utf8").includes(
@@ -136,6 +146,12 @@ assert.equal(sendsCodec.unwrap({ msg: 'ok', data: 42 }), 42)
 const schema = z.number().transform(value => ({ answer: value }))
 assert.deepEqual(await client.call(defineEndpoint({ method: 'GET', path: '/schema', validator: schema }), {}), { answer: 42 })
 assert.deepEqual(await client.call(defineEndpoint({ method: 'GET', path: '/async-schema', validator: { parse: value => schema.parseAsync(value) } }), {}), { answer: 42 })
+const directAsync = defineEndpoint({
+  method: 'POST', path: '/direct-async',
+  inputValidators: { body: z.object({ value: z.string().transform(async value => Number(value)) }) },
+  validator: z.number().refine(async value => value === 42),
+})
+assert.equal(await client.call(directAsync, { body: { value: '18' } }), 42)
 await assert.rejects(client.call(defineEndpoint({ method: 'GET', path: '/invalid-schema', cache: true, validator: z.string() }), {}), error => error.kind === 'validation' && error.cause instanceof z.ZodError)
 client.dispose()
 const adapter = async config => ({ data: JSON.stringify({ msg: 'ok', data: 42 }), status: 200, statusText: 'OK', headers: {}, config })

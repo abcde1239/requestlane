@@ -4,7 +4,9 @@ out/
 artifacts/
 coverage/
 .cache/
-docs/
+docs/*
+!docs/public/
+.harness/
 verification/
 verficaction/
 .agent/

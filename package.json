@@ -32,6 +32,7 @@
     "dist",
     "README.md",
     "USAGE.md",
+    "docs/public",
     "examples",
     "LICENSE"
   ],
@@ -74,6 +75,8 @@
     "test:coverage": "node scripts/test-coverage.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "harness-lint": "node scripts/harness-lint.mjs",
+    "docs:check": "node scripts/check-docs.mjs",
     "test:commit": "node scripts/pre-commit.mjs",
     "prepare": "node -e \"if (require('node:fs').existsSync('.git')) import('husky').then(({ default: husky }) => husky())\"",
     "build": "node scripts/build.mjs",
