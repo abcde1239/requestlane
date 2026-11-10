@@ -1,6 +1,6 @@
 # 包入口参考
 
-[文档首页](../README.md) · [快速开始](../guides/usage.md)
+[文档首页](../index.md) · [快速开始](../guides/usage.md)
 
 ## 安装与导入
 
@@ -31,9 +31,12 @@ Axios、Zod 是必须运行依赖，随包自动安装。子路径隔离运行�
 | 模块格式   | ESM                                                  |
 | 浏览器     | 支持 Fetch、AbortController 等标准 API 的现代浏览器  |
 | Node.js    | 20+；baseURL 使用完整 URL                            |
+| Bun        | 已在 1.3.4 上运行现有测试；最低兼容版本尚未单独验证  |
 | TypeScript | 核心类型支持 5.0+；Zod 使用场景还需满足 Zod 自身要求 |
 
 客户端不会默认选择 transport。Axios、Fetch 或自定义 transport 都需要显式传入。
+
+Deno、Cloudflare Workers 等其他运行时尚未纳入兼容性验证。核心与 Fetch transport 使用标准 Web API，但完整请求还依赖目标环境的 API 实现及包加载方式；不能据此视为已验证支持。需要接入这些环境时，优先使用 Fetch transport 并在目标环境验收。
 
 ## 版本说明
 

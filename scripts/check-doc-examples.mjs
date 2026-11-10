@@ -22,20 +22,48 @@ const headingSlug = (value) =>
     .replace(/[^\p{L}\p{N}\p{M}\s_-]/gu, "")
     .replace(/ /g, "-");
 let snippets = 0,
-  anchors = 0;
+  anchors = 0,
+  pages = 0;
 const generated = [];
 for (const file of docs) {
   const source = fs.readFileSync(file, "utf8");
-  const code = [
-    ...source.matchAll(/\x60\x60\x60ts\r?\n([\s\S]*?)\x60\x60\x60/g),
-  ].map((m) => m[1]);
-  snippets += code.length;
-  if (code.length) {
-    const target = path.join(
-      folder,
-      path.relative(root, path.resolve(file)).replace(/[^\p{L}\p{N}]/gu, "_") +
-        ".ts",
+  const blocks = [
+    ...source.matchAll(
+      /\x60\x60\x60ts(?: file="([^"]+)")?\r?\n([\s\S]*?)\x60\x60\x60/g,
+    ),
+  ];
+  const code = [];
+  const page = path
+    .relative(root, path.resolve(file))
+    .replace(/[^\p{L}\p{N}]/gu, "_");
+  const named = new Set();
+  let namedFolder;
+  for (const block of blocks) {
+    const [, explicitName, body] = block;
+    const label = source
+      .slice(0, block.index)
+      .match(/(?:^|\r?\n)\x60([^\x60\r\n]+\.ts)\x60[^\r\n]*\r?\n\r?\n$/);
+    const name = explicitName ?? label?.[1];
+    if (!name) {
+      code.push(body);
+      continue;
+    }
+    assert(
+      /^(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.ts$/.test(name),
+      `Invalid example filename: ${file} -> ${name}`,
     );
+    assert(!named.has(name), `Duplicate example filename: ${file} -> ${name}`);
+    named.add(name);
+    namedFolder ??= fs.mkdtempSync(path.join(folder, page + "-"));
+    const target = path.join(namedFolder, name);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, body, "utf8");
+    generated.push(target);
+  }
+  snippets += blocks.length;
+  if (blocks.length) pages++;
+  if (code.length) {
+    const target = path.join(folder, page + ".ts");
     fs.writeFileSync(target, "export {};\n" + code.join("\n"), "utf8");
     generated.push(target);
   }
@@ -91,7 +119,8 @@ console.log(
   JSON.stringify({
     documents: docs.length,
     snippets,
-    pages: generated.length,
+    pages,
+    files: generated.length,
     anchors,
   }),
 );

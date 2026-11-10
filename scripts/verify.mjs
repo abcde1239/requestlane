@@ -18,6 +18,8 @@ run(process.execPath, ["scripts/build.mjs"]);
 console.log("[verify] public documentation links, anchors and examples");
 run(process.execPath, ["scripts/check-docs.mjs"]);
 run(process.execPath, ["scripts/check-doc-examples.mjs"]);
+console.log("[verify] VitePress build and public site boundary");
+run(process.execPath, ["scripts/docs-build.mjs"]);
 console.log("[verify] local package and independent consumers");
 const tarball = pack();
 consumers(tarball);

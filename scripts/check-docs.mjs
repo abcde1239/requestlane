@@ -32,10 +32,15 @@ function collect(directory) {
 
 const documents = ["README.md", "USAGE.md", ...collect("docs/public")];
 for (const required of [
-  "docs/public/README.md",
+  "docs/public/index.md",
   "docs/public/guides/usage.md",
   "docs/public/reference/exports.md",
-  "docs/public/examples/README.md",
+  "docs/public/examples/index.md",
+  "docs/public/reference/client.md",
+  "docs/public/reference/cache.md",
+  "docs/public/reference/session.md",
+  "docs/public/reference/response.md",
+  "docs/public/reference/service.md",
 ])
   assert(documents.includes(required), `缺少公开文档：${required}`);
 

@@ -38,7 +38,7 @@ export function installSmoke(tarball) {
   const require = createRequire(join(directory, "smoke.mjs"));
   assert(require.resolve("axios"), "安装 requestlane 应自动安装 Axios");
   assert(require.resolve("zod"), "安装 requestlane 应自动安装 Zod");
-  for (const dependency of ["husky", "typescript"])
+  for (const dependency of ["husky", "typescript", "vitepress"])
     assert.throws(
       () => require.resolve(dependency),
       `生产安装不应包含 ${dependency}`,

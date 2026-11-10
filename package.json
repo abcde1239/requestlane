@@ -77,6 +77,9 @@
     "format:check": "prettier --check .",
     "harness-lint": "node scripts/harness-lint.mjs",
     "docs:check": "node scripts/check-docs.mjs",
+    "docs:dev": "vitepress dev website",
+    "docs:build": "node scripts/docs-build.mjs",
+    "docs:preview": "vitepress preview website",
     "test:commit": "node scripts/pre-commit.mjs",
     "prepare": "node -e \"if (require('node:fs').existsSync('.git')) import('husky').then(({ default: husky }) => husky())\"",
     "build": "node scripts/build.mjs",
@@ -95,6 +98,7 @@
     "prettier": "3.9.10",
     "tsc-alias": "1.9.7",
     "typescript": "7.0.2",
-    "typescript-min": "npm:typescript@5.0.4"
+    "typescript-min": "npm:typescript@5.0.4",
+    "vitepress": "1.6.4"
   }
 }

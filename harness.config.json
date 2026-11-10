@@ -17,7 +17,8 @@
       "test",
       "scripts",
       "examples",
-      ".github"
+      ".github",
+      "website"
     ],
     "internalRoots": [
       "docs/development",

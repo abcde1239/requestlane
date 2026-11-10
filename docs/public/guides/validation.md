@@ -1,17 +1,19 @@
-# 类型与校验
+# Client：端点类型与校验
 
-[文档首页](../README.md) · [快速开始](./usage.md) · [内存缓存](./cache.md)
+[文档首页](../index.md) · [Client 与 Core](../reference/client.md) · [Response](../reference/response.md)
 
 使用 `defineEndpoint` 描述接口，将 Zod schema 传入 `inputValidators` 和 `validator`，即可获得请求输入校验、响应校验与 TypeScript 类型推断。
+
+本页是 Client 的端点配套说明。`validator` 检查 codec 解包后的业务字段；统一响应外层的解析与解包见 [Response](../reference/response.md)。
 
 ## 定义端点
 
 ```ts
-import { createCoreClient, defineEndpoint } from "requestlane/core";
+import { createClient, defineEndpoint } from "requestlane";
 import { createAxiosTransport } from "requestlane/axios";
 import { z } from "zod";
 
-const client = createCoreClient({
+const client = createClient({
   baseURL: "/api",
   transport: createAxiosTransport(),
 });
@@ -40,6 +42,8 @@ console.log(member.name); // string
 | `validator`              | 协议解包后的响应数据 |
 
 请求输入未通过校验时，不会发送请求。响应未通过校验时，不会写入缓存。`call` 的结果提供只读类型视图，需要编辑数据时先复制。
+
+本页沿用快速开始的完整客户端；只需请求与校验时也可使用[核心客户端](./modules.md#创建请求客户端)，端点和调用方式相同。
 
 ## 转换输入
 

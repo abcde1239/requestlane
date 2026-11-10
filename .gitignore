@@ -44,6 +44,10 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .cache
 *.tsbuildinfo
 
+# VitePress generated files (site output lives under artifacts)
+/website/.vitepress/cache/
+/website/.vitepress/dist/
+
 # IntelliJ based IDEs
 .idea
 .vscode

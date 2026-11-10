@@ -92,6 +92,8 @@ try {
     run(process.execPath, ["scripts/check-doc-examples.mjs"], {
       cwd: snapshot,
     });
+    if (existsSync(join(snapshot, "website/.vitepress/config.mts")))
+      run(process.execPath, ["scripts/docs-build.mjs"], { cwd: snapshot });
   }
   console.log("[pre-commit] 暂存区检查通过");
 } finally {

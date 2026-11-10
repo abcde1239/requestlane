@@ -14,3 +14,6 @@ verficaction/
 .codex/
 bun.lock
 *.tgz
+
+website/.vitepress/cache/
+website/.vitepress/dist/
