@@ -90,7 +90,9 @@ jobs:
           RELEASE_EVENT: workflow_dispatch
       - name: Publish verified tarball through npm OIDC
         if: steps.plan.outputs.publish == 'true'
-        run: npm publish "artifacts/$TARBALL" --access public --tag "$DIST_TAG" --registry=https://registry.npmjs.org/ --provenance
+        run: |
+          test -f "./artifacts/$TARBALL"
+          npm publish "./artifacts/$TARBALL" --access public --tag "$DIST_TAG" --registry=https://registry.npmjs.org/ --provenance
         env:
           TARBALL: ${{ needs.verify.outputs.tarball }}
           DIST_TAG: ${{ needs.verify.outputs.tag }}
